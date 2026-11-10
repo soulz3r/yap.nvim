@@ -165,7 +165,7 @@ local function open_output(root, title)
 	local buf = vim.api.nvim_create_buf(false, true)
 	local width = math.max(1, math.min(vim.o.columns - 4, math.floor(vim.o.columns * 0.82)))
 	local height = math.max(1, math.min(vim.o.lines - 4, math.floor(vim.o.lines * 0.72)))
-	local separator = string.rep("─", math.max(1, width - 2))
+	local separator = string.rep("─", math.max(1, width))
 	local win = vim.api.nvim_open_win(buf, true, {
 		relative = "editor",
 		width = width,
@@ -556,7 +556,7 @@ local function open_output(root, title)
 		"Root: " .. root,
 		"Platform: " .. (paths.is_windows and "Windows" or "Unix"),
 		"Started: " .. os.date("%Y-%m-%d %H:%M:%S"),
-		string.rep("─", 64),
+		separator,
 	})
 
 	return append
@@ -609,8 +609,7 @@ local function run_command(command, root, append, callback)
 				end
 
 				local elapsed = (vim.uv.hrtime() - started_at) / 1000000000
-				append({ string.format("Duration: %.2fs", elapsed) })
-				callback(code)
+				callback(code, elapsed)
 			end)
 		end,
 	})
@@ -706,8 +705,9 @@ local function launch(file, root, append, args)
 	local started = run_command(command, root, append, function(code)
 		append({
 			"",
-			code == 0 and "Process finished successfully."
-				or ("Process exited with code " .. code),
+			code == 0
+				and string.format("Process finished successfully. · Duration: %.2fs", elapsed)
+				or string.format("Process exited with code %d. · Duration: %.2fs", code, elapsed),
 		})
 	end)
 
@@ -728,12 +728,12 @@ local function build(root, append, callback, selected_script)
 		return
 	end
 
-	run_command(command, root, append, function(code)
+	run_command(command, root, append, function(code, elapsed)
 		if code == 0 then
-			append({ "", "Build succeeded." })
+			append({ "", string.format("Build succeeded. · Duration: %.2fs", elapsed) })
 			callback(true)
 		else
-			append({ "", "Build failed. Exit code: " .. code })
+			append({ "", string.format("Build failed. Exit code: %d · Duration: %.2fs", code, elapsed) })
 			callback(false)
 		end
 	end)
@@ -756,11 +756,11 @@ local function clean(root, append, callback)
 	end
 
 	append({ "Clean script: " .. script })
-	run_command(command, root, append, function(code)
+	run_command(command, root, append, function(code, elapsed)
 		if code == 0 then
-			append({ "", "Clean succeeded." })
+			append({ string.format("Clean succeeded. · Duration: %.2fs", elapsed) })
 		else
-			append({ "", "Clean failed. Exit code: " .. code })
+			append({ string.format("Clean failed. Exit code: %d · Duration: %.2fs", code, elapsed) })
 		end
 
 		callback(code == 0, true)
