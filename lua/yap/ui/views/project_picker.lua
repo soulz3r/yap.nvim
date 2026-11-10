@@ -5,7 +5,6 @@ local layout = require("yap.ui.layout")
 
 local Input = require("yap.ui.components.input")
 local SelectableList = require("yap.ui.components.selectable_list")
-local KeymapHints = require("yap.ui.components.keymap_hints")
 local style = require("yap.ui.components.style")
 
 local markers = {
@@ -222,11 +221,14 @@ function M.open(opts)
 	local first = entries[1]
 	local initial_readme = first and readme_for(first.root) or nil
 
+	local preview_content = preview_for(first)
+	local readme_content = initial_readme
+
 	local signal = n.create_signal({
 		filtered = make_nodes(n, entries),
 		selected_path = first and first.root or "",
-		preview_lines = preview_for(first),
-		readme_lines = initial_readme or "",
+		preview_lines = preview_content,
+		readme_lines = readme_content or "",
 		has_readme = initial_readme ~= nil,
 		has_results = #entries > 0,
 		empty_message = #entries > 0 and "No matching C projects" or "No C projects found",
@@ -235,13 +237,18 @@ function M.open(opts)
 
 	local renderer = layout.create_renderer(opts)
 
+	local function refresh_content()
+		local hints = signal.hints:get_value()
+		signal.preview_lines = preview_content .. (readme_content and "" or "\\n" .. hints)
+		signal.readme_lines = readme_content and (readme_content .. "\\n" .. hints) or ""
+	end
+
 	local function update_preview(project)
 		signal.selected_path = project and project.root or ""
-		signal.preview_lines = preview_for(project)
-
-		local lines = project and readme_for(project.root) or nil
-		signal.has_readme = lines ~= nil
-		signal.readme_lines = lines or ""
+		preview_content = preview_for(project)
+		readme_content = project and readme_for(project.root) or nil
+		signal.has_readme = readme_content ~= nil
+		refresh_content()
 	end
 
 	local function choose(path)
@@ -386,7 +393,6 @@ function M.open(opts)
 				hidden = signal.has_readme:negate(),
 			})),
 
-			KeymapHints(n, { lines = signal.hints })
 		)
 	end
 
@@ -401,6 +407,7 @@ function M.open(opts)
 				end
 				input:focus()
 				signal.hints = hints_for("insert")
+				refresh_content()
 				vim.schedule(function()
 					if vim.api.nvim_win_is_valid(input.winid) then
 						vim.cmd("startinsert")
@@ -413,6 +420,7 @@ function M.open(opts)
 			key = "<Esc>",
 			handler = function()
 				signal.hints = hints_for("normal")
+				refresh_content()
 				vim.schedule(function()
 					local input = renderer:get_component_by_id("project-search")
 					if input and vim.api.nvim_get_current_win() == input.winid then
