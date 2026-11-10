@@ -24,6 +24,8 @@ With lazy.nvim:
 {
   "soulz3r/yap.nvim",
   dependencies = {
+    "MunifTanjim/nui.nvim",
+    "grapp-dev/nui-components.nvim",
     "nvim-telescope/telescope.nvim",
     "nvim-telescope/telescope-project.nvim",
   },
@@ -46,7 +48,11 @@ With lazy.nvim:
 }
 ```
 
-Set `projects_dir` to your project directory. If omitted, YAP uses `PROJECTS_DIR`, `D:/config/projects` on Windows, or `~/projects` elsewhere. Telescope integration is disabled by default; set `telescope = true` to enable it. When enabling it, install both Telescope and `telescope-project.nvim` as shown above.
+NuiComponents is used for YAP's floating output and C/C++ project-information views. It is a required UI dependency; `nui.nvim` is installed alongside it. Set `projects_dir` to your project directory. If omitted, YAP uses `PROJECTS_DIR`, `D:/config/projects` on Windows, or `~/projects` elsewhere. Telescope integration is disabled by default; set `telescope = true` to enable it. When enabling it, install both Telescope and `telescope-project.nvim` as shown above.
+
+## UI
+
+YAP uses NuiComponents renderers for its floating buffer views. The process-output buffer remains a normal Neovim buffer, so ANSI parsing, compiler diagnostics, quickfix extraction, and streaming process output stay in YAP's existing project engine. NuiComponents owns the floating layout, border, and buffer presentation.
 
 ## Colors
 
