@@ -250,7 +250,7 @@ function M.open(opts)
 			n,
 			initial_readme,
 			current_hints,
-			math.max(1, renderer:get_size().width - 4)
+			math.max(1, renderer:get_size().width)
 		),
 		has_results = #entries > 0,
 		empty_message = #entries > 0 and "No matching C projects" or "No C projects found",
@@ -262,7 +262,7 @@ function M.open(opts)
 			n,
 			readme_content,
 			current_hints,
-			math.max(1, renderer:get_size().width - 4)
+			math.max(1, renderer:get_size().width)
 		)
 	end
 
