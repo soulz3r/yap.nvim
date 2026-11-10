@@ -7,8 +7,7 @@ return function(n, props)
 		autofocus = true,
 		is_focusable = true,
 		max_lines = 1,
-		prefix = "  ",
-		placeholder = "Search C projects...",
+		prefix = "",
 		border_style = "none",
 	}, props))
 end
