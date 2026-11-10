@@ -6,7 +6,7 @@ return function(n, props)
 		flex = 1,
 		is_focusable = false,
 		align = "left",
-		max_lines = 22,
+		max_lines = 8,
 		truncate = false,
 	}, props))
 end
