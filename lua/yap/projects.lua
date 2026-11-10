@@ -190,6 +190,56 @@ local function open_output(root, title)
 	vim.wo[win].cursorline = true
 	floats.apply(win)
 
+	local semantic_patterns = {
+		{ pattern = "^%s*[%w /+_-]+ PHASE%s*$", group = "YapPhase" },
+		{ pattern = "^%s*[%w /+_-]+%s*$", group = nil },
+	}
+
+	local function apply_semantic_highlight(line, row)
+		local trimmed = vim.trim(line)
+		local group
+
+		if trimmed:match("^%$ ") or trimmed:match("^Command:") then
+			group = "YapCommand"
+		elseif trimmed:match("^Project:") or trimmed:match("^Root:") then
+			group = "YapPath"
+		elseif trimmed:match("^Build script:") or trimmed:match("^Clean script:")
+			or trimmed:match("^Executable:") or trimmed:match("^Directory:")
+		then
+			group = "YapPath"
+		elseif trimmed:match("^Duration:") or trimmed:match("^Exit code:")
+			or trimmed:match("^Arguments:") or trimmed:match("^Platform:")
+		then
+			group = "YapMetadata"
+		elseif trimmed:match("^BUILD$") or trimmed:match("^CLEAN$")
+			or trimmed:match("^EXECUTION$") or trimmed:match("^PROJECT$")
+		then
+			group = "YapPhase"
+		elseif trimmed:match("succeeded") or trimmed:match("successfully")
+			or trimmed:match("^Build completed")
+		then
+			group = "YapSuccess"
+		elseif trimmed:match("failed") or trimmed:match("Could not")
+			or trimmed:match("No supported") or trimmed:match("No .* found")
+		then
+			group = "YapError"
+		elseif trimmed:match("warning:")
+			or trimmed:match("Warning:")
+		then
+			group = "YapWarning"
+		elseif trimmed:match("error:")
+			or trimmed:match("Error:")
+		then
+			group = "YapError"
+		elseif trimmed:match("^%s*[%w_.%-]+%.[ch]%w*:%d+:%d+:") then
+			group = "YapDiagnostic"
+		end
+
+		if group then
+			vim.api.nvim_buf_add_highlight(buf, -1, group, row, 0, -1)
+		end
+	end
+
 	local ansi_palette = {
 		"#000000", "#cc6666", "#b5bd68", "#f0c674",
 		"#81a2be", "#b294bb", "#8abeb7", "#c5c8c6",
@@ -392,6 +442,7 @@ local function open_output(root, title)
 		end
 
 		for line_index, highlights in ipairs(line_highlights) do
+			apply_semantic_highlight(clean_lines[line_index], start_line + line_index - 1)
 			for _, highlight in ipairs(highlights) do
 				vim.api.nvim_buf_add_highlight(
 					buf,
@@ -498,7 +549,15 @@ local function open_output(root, title)
 		desc = "Open project diagnostics",
 	})
 
-	append({ "Project: " .. root })
+	append({
+		"YAP PROJECT RUNNER",
+		string.rep("─", 64),
+		"Project: " .. vim.fn.fnamemodify(root, ":t"),
+		"Root: " .. root,
+		"Platform: " .. (paths.is_windows and "Windows" or "Unix"),
+		"Started: " .. os.date("%Y-%m-%d %H:%M:%S"),
+		string.rep("─", 64),
+	})
 
 	return append
 end
@@ -510,7 +569,7 @@ local function run_command(command, root, append, callback)
 	end
 
 	active_job = nil
-	append({ "", "$ " .. table.concat(command, " ") })
+	append({ "", "Command: " .. table.concat(command, " ") })
 	local started_at = vim.uv.hrtime()
 
 	local job = vim.fn.jobstart(command, {
@@ -634,7 +693,12 @@ local function launch(file, root, append, args)
 		last_run = os.time(),
 	}
 
-	append({ "", "Executable: " .. vim.fn.fnamemodify(file, ":t") })
+	append({
+		"",
+		"Executable: " .. vim.fn.fnamemodify(file, ":t"),
+		"Path: " .. file,
+		"Arguments: " .. (#(args or {}) > 0 and table.concat(args, " ") or "(none)"),
+	})
 
 	local command = { file }
 	vim.list_extend(command, args or {})
