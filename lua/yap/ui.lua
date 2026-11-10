@@ -24,6 +24,11 @@ local default_highlights = {
 	success = { link = "DiagnosticOk" },
 	warning = { link = "DiagnosticWarn" },
 	error = { link = "DiagnosticError" },
+	command = { link = "Statement" },
+	path = { link = "Directory" },
+	phase = { link = "Title" },
+	metadata = { link = "Comment" },
+	diagnostic = { link = "DiagnosticInfo" },
 }
 
 local highlight_groups = {
@@ -35,6 +40,11 @@ local highlight_groups = {
 	success = "YapSuccess",
 	warning = "YapWarning",
 	error = "YapError",
+	command = "YapCommand",
+	path = "YapPath",
+	phase = "YapPhase",
+	metadata = "YapMetadata",
+	diagnostic = "YapDiagnostic",
 }
 
 local function apply_highlights(highlights)
