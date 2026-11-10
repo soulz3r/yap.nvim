@@ -245,6 +245,7 @@ function M.open(opts)
 		preview_lines = preview_content,
 		description_lines = description_lines(n, initial_readme),
 		hints = current_hints,
+		has_readme = initial_readme ~= nil,
 		has_results = #entries > 0,
 		empty_message = #entries > 0 and "No matching C projects" or "No C projects found",
 	})
@@ -252,6 +253,7 @@ function M.open(opts)
 	local function refresh_content()
 		signal.preview_lines = preview_content
 		signal.description_lines = description_lines(n, readme_content)
+		signal.has_readme = readme_content ~= nil
 		signal.hints = current_hints
 	end
 
