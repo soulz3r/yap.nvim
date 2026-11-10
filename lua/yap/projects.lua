@@ -725,9 +725,10 @@ local function launch(file, root, append, args)
 	local started = run_command(command, root, append, function(code, elapsed)
 		append({
 			"",
-			code == 0
-				and string.format("Process finished successfully. · Duration: %.2fs", elapsed)
-				or string.format("Process exited with code %d. · Duration: %.2fs", code, elapsed),
+			result_line(
+				code == 0 and "Process finished successfully." or string.format("Process exited with code %d.", code),
+				elapsed
+			),
 		})
 	end)
 
