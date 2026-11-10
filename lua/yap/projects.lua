@@ -185,8 +185,6 @@ local function open_output(root, title)
 	vim.bo[buf].readonly = true
 	vim.bo[buf].modifiable = false
 
-	require("yap.ui").hide_statusline(win)
-
 	vim.wo[win].wrap = true
 	vim.wo[win].cursorline = true
 	floats.apply(win)
