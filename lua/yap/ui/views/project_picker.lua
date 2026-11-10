@@ -5,6 +5,7 @@ local layout = require("yap.ui.layout")
 
 local Input = require("yap.ui.components.input")
 local SelectableList = require("yap.ui.components.selectable_list")
+local KeymapHints = require("yap.ui.components.keymap_hints")
 local style = require("yap.ui.components.style")
 
 local markers = {
@@ -237,20 +238,11 @@ function M.open(opts)
 
 	local renderer = layout.create_renderer(opts)
 
-	local function refresh_content()
-		local hints = signal.hints:get_value()
-		signal.preview_lines = preview_content .. (readme_content and "" or "\n" .. hints)
-		signal.readme_lines = readme_content and (readme_content .. "\n" .. hints) or ""
-	end
-
-	refresh_content()
-
 	local function update_preview(project)
 		signal.selected_path = project and project.root or ""
 		preview_content = preview_for(project)
 		readme_content = project and readme_for(project.root) or nil
 		signal.has_readme = readme_content ~= nil
-		refresh_content()
 	end
 
 	local function choose(path)
@@ -389,11 +381,14 @@ function M.open(opts)
 				id = "project-description",
 				is_focusable = false,
 				align = "left",
-				max_lines = 9,
+				max_lines = 8,
 				truncate = true,
 				lines = signal.readme_lines,
 				hidden = signal.has_readme:negate(),
-			}))
+			})),
+			KeymapHints(n, {
+				lines = signal.hints,
+			})
 		)
 	end
 
@@ -408,7 +403,6 @@ function M.open(opts)
 				end
 				input:focus()
 				signal.hints = hints_for("insert")
-				refresh_content()
 				vim.schedule(function()
 					if vim.api.nvim_win_is_valid(input.winid) then
 						vim.cmd("startinsert")
@@ -421,7 +415,6 @@ function M.open(opts)
 			key = "<Esc>",
 			handler = function()
 				signal.hints = hints_for("normal")
-				refresh_content()
 				vim.schedule(function()
 					local input = renderer:get_component_by_id("project-search")
 					if input and vim.api.nvim_get_current_win() == input.winid then
