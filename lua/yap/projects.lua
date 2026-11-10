@@ -171,32 +171,11 @@ local function section_separator(label)
 end
 
 local function open_output(root, title, initial_section)
-	local floats = require("yap.ui")
+	local ui = require("yap.ui")
 	local output_lines = {}
 	local buf = vim.api.nvim_create_buf(false, true)
 	local width = math.max(1, math.min(vim.o.columns - 4, math.floor(vim.o.columns * 0.82)))
 	local height = math.max(1, math.min(vim.o.lines - 4, math.floor(vim.o.lines * 0.72)))
-	local win = vim.api.nvim_open_win(buf, true, {
-		relative = "editor",
-		width = width,
-		height = height,
-		row = math.floor((vim.o.lines - height) / 2),
-		col = math.floor((vim.o.columns - width) / 2),
-		style = "minimal",
-		border = floats.border,
-		title = " " .. title .. " ",
-		title_pos = "center",
-	})
-
-	vim.wo[win].number = false
-	vim.wo[win].relativenumber = false
-	vim.wo[win].signcolumn = "no"
-	vim.wo[win].foldcolumn = "0"
-	vim.wo[win].statuscolumn = ""
-
-	local content_width = vim.api.nvim_win_get_width(win)
-	output_width = content_width
-	local separator = string.rep("─", content_width)
 
 	vim.bo[buf].buftype = "nofile"
 	vim.bo[buf].bufhidden = "wipe"
@@ -205,9 +184,17 @@ local function open_output(root, title, initial_section)
 	vim.bo[buf].readonly = true
 	vim.bo[buf].modifiable = false
 
-	vim.wo[win].wrap = true
-	vim.wo[win].cursorline = true
-	floats.apply(win)
+	local renderer, win = ui.open_buffer(buf, {
+		width = width,
+		height = height,
+		title = title,
+		wrap = true,
+		cursorline = true,
+		autoscroll = true,
+	})
+	local content_width = math.max(1, vim.api.nvim_win_get_width(win) - 2)
+	output_width = content_width
+	local separator = string.rep("─", content_width)
 
 	local function apply_semantic_highlight(line, row)
 		local trimmed = vim.trim(line)
@@ -489,9 +476,7 @@ local function open_output(root, title, initial_section)
 	end
 
 	local function close()
-		if vim.api.nvim_win_is_valid(win) then
-			vim.api.nvim_win_close(win, true)
-		end
+		renderer:close()
 	end
 
 	for _, key in ipairs({ "q", "<Esc>" }) do
