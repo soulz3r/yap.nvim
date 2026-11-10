@@ -215,7 +215,7 @@ local function hints_for(mode)
 end
 
 local function append_hints(content, hints)
-	return content .. "\\n\\n" .. hints
+	return content .. "\n\n" .. hints
 end
 
 function M.open(opts)
