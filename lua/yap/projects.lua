@@ -194,7 +194,11 @@ local function open_output(root, title)
 		local trimmed = vim.trim(line)
 		local group
 
-		if trimmed:match("^%$ ") or trimmed:match("^Command:") then
+		if trimmed == "YAP PROJECT RUNNER" then
+			group = "YapPhase"
+		elseif trimmed:match("^─+$") then
+			group = "YapMuted"
+		elseif trimmed:match("^%$ ") or trimmed:match("^Command:") then
 			group = "YapCommand"
 		elseif trimmed:match("^Project:") or trimmed:match("^Root:") then
 			group = "YapPath"
