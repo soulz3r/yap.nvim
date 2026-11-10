@@ -214,10 +214,6 @@ local function hints_for(mode)
 	return "i  search     j/k or Ctrl-N/P  navigate     Enter  open     q  close"
 end
 
-local function append_hints(content, hints)
-	return content .. "\n\n" .. hints
-end
-
 function M.open(opts)
 	opts = opts or {}
 	local n = require("nui-components")
@@ -232,8 +228,9 @@ function M.open(opts)
 	local signal = n.create_signal({
 		filtered = make_nodes(n, entries),
 		selected_path = first and first.root or "",
-		preview_lines = initial_readme and preview_content or append_hints(preview_content, current_hints),
-		readme_lines = initial_readme and append_hints(initial_readme, current_hints) or "",
+		preview_lines = preview_content,
+		readme_lines = initial_readme or "",
+		hints = current_hints,
 		has_readme = initial_readme ~= nil,
 		has_results = #entries > 0,
 		empty_message = #entries > 0 and "No matching C projects" or "No C projects found",
@@ -242,13 +239,9 @@ function M.open(opts)
 	local renderer = layout.create_renderer(opts)
 
 	local function refresh_content()
-		if readme_content then
-			signal.readme_lines = append_hints(readme_content, current_hints)
-			signal.preview_lines = preview_content
-		else
-			signal.readme_lines = ""
-			signal.preview_lines = append_hints(preview_content, current_hints)
-		end
+		signal.readme_lines = readme_content or ""
+		signal.preview_lines = preview_content
+		signal.hints = current_hints
 	end
 
 	local function update_preview(project)
@@ -399,6 +392,15 @@ function M.open(opts)
 				truncate = true,
 				lines = signal.readme_lines,
 				hidden = signal.has_readme:negate(),
+			})),
+			n.paragraph(style.with_defaults({
+				id = "project-keymap-hints",
+				size = 1,
+				max_lines = 1,
+				border_style = "none",
+				is_focusable = false,
+				align = "right",
+				lines = signal.hints,
 			}))
 		)
 	end
