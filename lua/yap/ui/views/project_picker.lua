@@ -384,7 +384,7 @@ function M.open(opts)
 				truncate = true,
 				lines = signal.readme_lines,
 				hidden = signal.has_readme:negate(),
-			}))
+			})),
 
 			KeymapHints(n, { lines = signal.hints })
 		)
