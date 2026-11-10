@@ -301,7 +301,7 @@ function M.open(opts)
 				on_blur = function()
 					signal.input_focused = false
 					signal.mode = "normal"
-					signal.hints = hints_for("normal")
+					signal.hints = to_lines(hints_for("normal"))
 				end,
 			}),
 			SelectableList(n, {
