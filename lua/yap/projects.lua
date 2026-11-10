@@ -165,6 +165,7 @@ local function open_output(root, title)
 	local buf = vim.api.nvim_create_buf(false, true)
 	local width = math.max(1, math.min(vim.o.columns - 4, math.floor(vim.o.columns * 0.82)))
 	local height = math.max(1, math.min(vim.o.lines - 4, math.floor(vim.o.lines * 0.72)))
+	local separator = string.rep("─", math.max(1, width - 2))
 	local win = vim.api.nvim_open_win(buf, true, {
 		relative = "editor",
 		width = width,
@@ -211,7 +212,7 @@ local function open_output(root, title)
 		then
 			group = "YapMetadata"
 		elseif trimmed:match("^BUILD$") or trimmed:match("^CLEAN$")
-			or trimmed:match("^EXECUTION$") or trimmed:match("^PROJECT$")
+			or trimmed:match("^EXECUTION$") or trimmed:match("^EXECUTING$") or trimmed:match("^PROJECT$")
 		then
 			group = "YapPhase"
 		elseif trimmed:match("succeeded") or trimmed:match("successfully")
@@ -550,7 +551,7 @@ local function open_output(root, title)
 
 	append({
 		"YAP PROJECT RUNNER",
-		string.rep("─", 64),
+		separator,
 		"Project: " .. vim.fn.fnamemodify(root, ":t"),
 		"Root: " .. root,
 		"Platform: " .. (paths.is_windows and "Windows" or "Unix"),
@@ -568,7 +569,7 @@ local function run_command(command, root, append, callback)
 	end
 
 	active_job = nil
-	append({ "", "Command: " .. table.concat(command, " ") })
+	append({ "", "EXECUTING", "Command: " .. table.concat(command, " ") })
 	local started_at = vim.uv.hrtime()
 
 	local job = vim.fn.jobstart(command, {
