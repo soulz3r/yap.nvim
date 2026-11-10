@@ -214,7 +214,7 @@ local function hints_for(mode)
 	return "i  search     j/k or Ctrl-N/P  navigate     Enter  open     q  close"
 end
 
-local function description_lines(n, readme, hints, width)
+local function description_lines(n, readme)
 	local lines = {}
 
 	if readme then
@@ -222,9 +222,6 @@ local function description_lines(n, readme, hints, width)
 			lines[#lines + 1] = n.line(line)
 		end
 	end
-
-	local padding = math.max(0, width - vim.api.nvim_strwidth(hints))
-	lines[#lines + 1] = n.line(string.rep(" ", padding), hints)
 
 	return lines
 end
@@ -246,24 +243,16 @@ function M.open(opts)
 		filtered = make_nodes(n, entries),
 		selected_path = first and first.root or "",
 		preview_lines = preview_content,
-		description_lines = description_lines(
-			n,
-			initial_readme,
-			current_hints,
-			math.max(1, renderer:get_size().width)
-		),
+		description_lines = description_lines(n, initial_readme),
+		hints = current_hints,
 		has_results = #entries > 0,
 		empty_message = #entries > 0 and "No matching C projects" or "No C projects found",
 	})
 
 	local function refresh_content()
 		signal.preview_lines = preview_content
-		signal.description_lines = description_lines(
-			n,
-			readme_content,
-			current_hints,
-			math.max(1, renderer:get_size().width)
-		)
+		signal.description_lines = description_lines(n, readme_content)
+		signal.hints = current_hints
 	end
 
 	local function update_preview(project)
@@ -412,6 +401,21 @@ function M.open(opts)
 				max_lines = 9,
 				truncate = false,
 				lines = signal.description_lines,
+				hidden = signal.has_readme:negate(),
+			})),
+			n.paragraph(style.with_defaults({
+				id = "project-keymap-hints",
+				size = 1,
+				is_focusable = false,
+				align = "right",
+				truncate = true,
+				lines = signal.hints,
+				window = {
+					highlight = {
+						NormalFloat = "Normal",
+						FloatBorder = "Normal",
+					},
+				},
 			}))
 		)
 	end
