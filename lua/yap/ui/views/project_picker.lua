@@ -397,6 +397,12 @@ function M.open(opts)
 			Footer(style.with_defaults({
 				id = "project-keymap-hints",
 				hints = signal.hints,
+				window = {
+					highlight = {
+						NormalFloat = "Normal",
+						FloatBorder = "Normal",
+					},
+				},
 			}))
 		)
 	end
