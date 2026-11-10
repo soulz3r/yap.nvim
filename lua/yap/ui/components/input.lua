@@ -3,6 +3,7 @@ local style = require("yap.ui.components.style")
 return function(n, props)
 	return n.prompt(style.with_defaults({
 		id = "project-search",
+		flex = 1,
 		size = 1,
 		autofocus = true,
 		is_focusable = true,
