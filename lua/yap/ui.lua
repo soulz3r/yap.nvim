@@ -101,6 +101,24 @@ function M.setup(highlights)
 	})
 end
 
+function M.centered(width, height, title)
+	local columns, lines = vim.o.columns, vim.o.lines
+	width = math.max(1, math.min(width or math.floor(columns * 0.72), columns - 4))
+	height = math.max(1, math.min(height or math.floor(lines * 0.62), lines - 4))
+
+	return {
+		relative = "editor",
+		style = "minimal",
+		border = M.border,
+		title = title and (" " .. title .. " ") or nil,
+		title_pos = "center",
+		width = width,
+		height = height,
+		row = math.max(0, math.floor((lines - height) / 2) - 1),
+		col = math.max(0, math.floor((columns - width) / 2)),
+	}
+end
+
 ---@param buf integer
 ---@param opts table|nil
 ---@return table renderer, integer win
@@ -129,7 +147,7 @@ function M.open_buffer(buf, opts)
 			border_style = "rounded",
 			window = {
 				highlight = {
-					Normal = "YapFloatNormal",
+					NormalFloat = "YapFloatNormal",
 					FloatBorder = "YapFloatBorder",
 				},
 			},
