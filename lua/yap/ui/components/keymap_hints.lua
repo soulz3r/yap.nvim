@@ -5,8 +5,9 @@ return function(n, props)
 		id = "project-keymap-hints",
 		size = 1,
 		is_focusable = false,
-		align = "right",
+		align = "left",
 		max_lines = 1,
 		truncate = true,
+		border_style = "none",
 	}, props))
 end
