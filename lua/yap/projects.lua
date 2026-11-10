@@ -628,8 +628,11 @@ local function run_command(command, root, append, callback)
 					active_job = nil
 				end
 
+				-- Normalize the exit status before passing it to callbacks.
+				-- Some termination paths can provide nil instead of a number.
+				local exit_code = tonumber(code) or -1
 				local elapsed = (vim.uv.hrtime() - started_at) / 1000000000
-				callback(code, elapsed)
+				callback(exit_code, elapsed)
 			end)
 		end,
 	})
