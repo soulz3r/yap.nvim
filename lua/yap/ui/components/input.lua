@@ -9,10 +9,6 @@ return function(n, props)
 		max_lines = 1,
 		prefix = "  ",
 		placeholder = "Search C projects...",
-		border_label = {
-			text = "Search",
-			align = "left",
-		},
-		border_style = "rounded",
+		border_style = "none",
 	}, props))
 end
