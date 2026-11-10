@@ -205,7 +205,7 @@ local function open_output(root, title)
 
 		if trimmed == "YAP PROJECT RUNNER" then
 			group = "YapPhase"
-		elseif trimmed:match("^─+$") then
+		elseif trimmed:match("^├─+┤$") or trimmed:match("^─+$") then
 			group = "YapMuted"
 		elseif trimmed:match("^%$ ") or trimmed:match("^Command:") then
 			group = "YapCommand"
