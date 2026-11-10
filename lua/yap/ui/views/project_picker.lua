@@ -375,18 +375,17 @@ function M.open(opts)
 					}))
 				)
 			),
-			n.rows({ flex = 0, hidden = signal.has_readme:negate() },
-				n.paragraph(style.with_defaults({
-					id = "project-description",
-					border_style = "rounded",
-					border_label = "Description",
-					is_focusable = false,
-					align = "left",
-					max_lines = 6,
-					truncate = true,
-					lines = signal.readme_lines,
-				}))
-			),
+
+			n.paragraph(style.with_defaults({
+				id = "project-description",
+				is_focusable = false,
+				align = "left",
+				max_lines = 6,
+				truncate = true,
+				lines = signal.readme_lines,
+				hidden = signal.has_readme:negate(),
+			}))
+
 			KeymapHints(n, { lines = signal.hints })
 		)
 	end
