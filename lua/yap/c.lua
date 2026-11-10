@@ -1,4 +1,5 @@
 local M = {}
+local configured = false
 
 local root_markers = {
 	".git",
@@ -119,6 +120,9 @@ local function compile_metadata()
 end
 
 function M.setup()
+	if configured then return M end
+	configured = true
+
 	local group = vim.api.nvim_create_augroup("YapCTools", { clear = true })
 	vim.api.nvim_create_autocmd("FileType", {
 		group = group,
