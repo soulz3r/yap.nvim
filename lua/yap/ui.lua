@@ -75,7 +75,11 @@ end
 
 ---@param highlights table|nil
 function M.setup(highlights)
-	local configured = vim.tbl_deep_extend("force", {}, default_highlights, highlights or {})
+	local configured = vim.deepcopy(default_highlights)
+
+	for name, options in pairs(highlights or {}) do
+		configured[name] = vim.deepcopy(options)
+	end
 	local group = vim.api.nvim_create_augroup("YapHighlights", { clear = true })
 
 	apply_highlights(configured)
