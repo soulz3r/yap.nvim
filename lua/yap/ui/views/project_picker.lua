@@ -5,7 +5,6 @@ local layout = require("yap.ui.layout")
 
 local Input = require("yap.ui.components.input")
 local SelectableList = require("yap.ui.components.selectable_list")
-local Footer = require("yap.ui.components.footer")
 local style = require("yap.ui.components.style")
 
 local markers = {
@@ -215,6 +214,21 @@ local function hints_for(mode)
 	return "i  search     j/k or Ctrl-N/P  navigate     Enter  open     q  close"
 end
 
+local function description_lines(n, readme, hints, width)
+	local lines = {}
+
+	if readme then
+		for _, line in ipairs(vim.split(readme, "\n", { plain = true })) do
+			lines[#lines + 1] = n.line(line)
+		end
+	end
+
+	local padding = math.max(0, width - vim.api.nvim_strwidth(hints))
+	lines[#lines + 1] = n.line(string.rep(" ", padding), hints)
+
+	return lines
+end
+
 function M.open(opts)
 	opts = opts or {}
 	local n = require("nui-components")
@@ -232,18 +246,24 @@ function M.open(opts)
 		filtered = make_nodes(n, entries),
 		selected_path = first and first.root or "",
 		preview_lines = preview_content,
-		readme_lines = initial_readme or "",
-		has_readme = initial_readme ~= nil,
-		hints = current_hints,
+		description_lines = description_lines(
+			n,
+			initial_readme,
+			current_hints,
+			math.max(1, renderer:get_size().width - 4)
+		),
 		has_results = #entries > 0,
 		empty_message = #entries > 0 and "No matching C projects" or "No C projects found",
 	})
 
 	local function refresh_content()
-		signal.hints = current_hints
 		signal.preview_lines = preview_content
-		signal.readme_lines = readme_content or ""
-		signal.has_readme = readme_content ~= nil
+		signal.description_lines = description_lines(
+			n,
+			readme_content,
+			current_hints,
+			math.max(1, renderer:get_size().width - 4)
+		)
 	end
 
 	local function update_preview(project)
@@ -389,20 +409,9 @@ function M.open(opts)
 				id = "project-description",
 				is_focusable = false,
 				align = "left",
-				max_lines = 8,
-				truncate = true,
-				lines = signal.readme_lines,
-				hidden = signal.has_readme:negate(),
-			})),
-			Footer(style.with_defaults({
-				id = "project-keymap-hints",
-				hints = signal.hints,
-				window = {
-					highlight = {
-						NormalFloat = "Normal",
-						FloatBorder = "Normal",
-					},
-				},
+				max_lines = 9,
+				truncate = false,
+				lines = signal.description_lines,
 			}))
 		)
 	end
