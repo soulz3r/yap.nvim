@@ -34,13 +34,10 @@ end
 
 function Footer:on_update()
 	self:modify_buffer_content(function()
-		local line = self:get_line()
+		local hints = self:get_props().hints
 		local width = self:get_size().width - self:get_border_delta_size().width
-		local padding = math.max(0, width - line:width())
-
-		if padding > 0 then
-			line = n.line(string.rep(" ", padding), line)
-		end
+		local padding = math.max(0, width - vim.api.nvim_strwidth(hints))
+		local line = n.line(string.rep(" ", padding), hints)
 
 		line:render(self.bufnr, -1, 1)
 	end)
