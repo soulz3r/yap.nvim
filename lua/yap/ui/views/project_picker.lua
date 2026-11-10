@@ -338,7 +338,7 @@ function M.open(opts)
 						id = "project-list-heading",
 						size = 1,
 						is_focusable = false,
-						lines = "PROJECTS",
+						lines = "Projects",
 					})),
 					SelectableList(n, {
 						data = signal.filtered,
@@ -368,7 +368,7 @@ function M.open(opts)
 						id = "project-preview-heading",
 						size = 1,
 						is_focusable = false,
-						lines = "PROJECT CONTENTS",
+						lines = "Preview",
 					})),
 					n.paragraph(style.with_defaults({
 						id = "project-preview",
@@ -378,23 +378,23 @@ function M.open(opts)
 						truncate = true,
 						lines = signal.preview_lines,
 					})),
-					n.paragraph(style.with_defaults({
-						id = "project-readme-heading",
-						size = 1,
-						is_focusable = false,
-						lines = "README",
-						hidden = signal.has_readme:negate(),
-					})),
-					n.paragraph(style.with_defaults({
-						id = "project-readme",
-						is_focusable = false,
-						align = "left",
-						max_lines = 6,
-						truncate = true,
-						lines = signal.readme_lines,
-						hidden = signal.has_readme:negate(),
-					}))
 				)
+			),
+			n.rows({ flex = 0, gap = 1, hidden = signal.has_readme:negate() },
+				n.paragraph(style.with_defaults({
+					id = "project-description-heading",
+					size = 1,
+					is_focusable = false,
+					lines = "Description",
+				})),
+				n.paragraph(style.with_defaults({
+					id = "project-description",
+					is_focusable = false,
+					align = "left",
+					max_lines = 6,
+					truncate = true,
+					lines = signal.readme_lines,
+				}))
 			),
 			KeymapHints(n, { lines = signal.hints })
 		)
