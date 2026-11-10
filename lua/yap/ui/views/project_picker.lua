@@ -5,7 +5,6 @@ local layout = require("yap.ui.layout")
 
 local Input = require("yap.ui.components.input")
 local SelectableList = require("yap.ui.components.selectable_list")
-local Description = require("yap.ui.components.description")
 local KeymapHints = require("yap.ui.components.keymap_hints")
 local style = require("yap.ui.components.style")
 
@@ -19,6 +18,11 @@ local markers = {
 	"compile_flags.txt",
 	"CMakeLists.txt",
 	"Makefile",
+}
+
+local preview_limits = {
+	depth = 3,
+	entries = 60,
 }
 
 local function normalize(path)
@@ -120,6 +124,70 @@ local function readme_for(root)
 	end
 end
 
+local function preview_for(project)
+	if not project then
+		return "Select a project to preview its files."
+	end
+
+	local lines = { project.name .. "/" }
+	local count = 0
+	local skipped = false
+
+	local function append_directory(path, prefix, depth)
+		local entries = {}
+
+		for name, kind in vim.fs.dir(path) do
+			if name ~= ".git" then
+				entries[#entries + 1] = {
+					name = name,
+					kind = kind,
+				}
+			end
+		end
+
+		table.sort(entries, function(a, b)
+			local a_dir = a.kind == "directory"
+			local b_dir = b.kind == "directory"
+			if a_dir ~= b_dir then
+				return a_dir
+			end
+			return a.name:lower() < b.name:lower()
+		end)
+
+		for index, entry in ipairs(entries) do
+			if count >= preview_limits.entries then
+				skipped = true
+				return
+			end
+
+			count = count + 1
+			local is_last = index == #entries
+			local branch = is_last and "└── " or "├── "
+			local child_prefix = prefix .. (is_last and "    " or "│   ")
+			local is_directory = entry.kind == "directory"
+
+			lines[#lines + 1] = prefix .. branch .. entry.name .. (is_directory and "/" or "")
+
+			if is_directory and depth < preview_limits.depth then
+				append_directory(vim.fs.joinpath(path, entry.name), child_prefix, depth + 1)
+				if skipped then
+					return
+				end
+			end
+		end
+	end
+
+	append_directory(project.root, "", 1)
+
+	if skipped then
+		lines[#lines + 1] = "… more files"
+	elseif count == 0 then
+		lines[#lines + 1] = "└── (empty project)"
+	end
+
+	return table.concat(lines, "\n")
+end
+
 local function make_nodes(n, entries)
 	local nodes = {}
 	for _, project in ipairs(entries) do
@@ -157,6 +225,7 @@ function M.open(opts)
 	local signal = n.create_signal({
 		filtered = make_nodes(n, entries),
 		selected_path = first and first.root or "",
+		preview_lines = preview_for(first),
 		readme_lines = initial_readme or "",
 		has_readme = initial_readme ~= nil,
 		has_results = #entries > 0,
@@ -166,8 +235,9 @@ function M.open(opts)
 
 	local renderer = layout.create_renderer(opts)
 
-	local function update_description(project)
+	local function update_preview(project)
 		signal.selected_path = project and project.root or ""
+		signal.preview_lines = preview_for(project)
 
 		local lines = project and readme_for(project.root) or nil
 		signal.has_readme = lines ~= nil
@@ -198,7 +268,7 @@ function M.open(opts)
 		signal.has_results = #filtered > 0
 		signal.empty_message = #entries == 0 and "No C projects found" or "No matching C projects"
 
-		update_description(filtered[1])
+		update_preview(filtered[1])
 
 		vim.schedule(function()
 			local list = renderer:get_component_by_id("project-list")
@@ -262,32 +332,70 @@ function M.open(opts)
 					choose(selected_path())
 				end,
 			}),
-			SelectableList(n, {
-				data = signal.filtered,
-				hidden = signal.has_results:negate(),
-				on_change = function(node)
-					if node then
-						update_description(find_project(entries, node.path))
-					end
-				end,
-				on_select = function(node)
-					if node then
-						choose(node.path)
-					end
-				end,
-			}),
-			n.paragraph(style.with_defaults({
-				id = "project-empty-message",
-				size = 1,
-				is_focusable = false,
-				align = "left",
-				lines = signal.empty_message,
-				hidden = signal.has_results,
-			})),
-			Description(n, {
-				lines = signal.readme_lines,
-				hidden = signal.has_readme:negate(),
-			}),
+			n.columns({ flex = 1, gap = 2 },
+				n.rows({ flex = 1, gap = 1 },
+					n.paragraph(style.with_defaults({
+						id = "project-list-heading",
+						size = 1,
+						is_focusable = false,
+						lines = "PROJECTS",
+					})),
+					SelectableList(n, {
+						data = signal.filtered,
+						hidden = signal.has_results:negate(),
+						on_change = function(node)
+							if node then
+								update_preview(find_project(entries, node.path))
+							end
+						end,
+						on_select = function(node)
+							if node then
+								choose(node.path)
+							end
+						end,
+					}),
+					n.paragraph(style.with_defaults({
+						id = "project-empty-message",
+						size = 1,
+						is_focusable = false,
+						align = "left",
+						lines = signal.empty_message,
+						hidden = signal.has_results,
+					}))
+				),
+				n.rows({ flex = 1.35, gap = 1, padding = { left = 1 } },
+					n.paragraph(style.with_defaults({
+						id = "project-preview-heading",
+						size = 1,
+						is_focusable = false,
+						lines = "PROJECT CONTENTS",
+					})),
+					n.paragraph(style.with_defaults({
+						id = "project-preview",
+						is_focusable = false,
+						align = "left",
+						max_lines = 18,
+						truncate = true,
+						lines = signal.preview_lines,
+					})),
+					n.paragraph(style.with_defaults({
+						id = "project-readme-heading",
+						size = 1,
+						is_focusable = false,
+						lines = "README",
+						hidden = signal.has_readme:negate(),
+					})),
+					n.paragraph(style.with_defaults({
+						id = "project-readme",
+						is_focusable = false,
+						align = "left",
+						max_lines = 6,
+						truncate = true,
+						lines = signal.readme_lines,
+						hidden = signal.has_readme:negate(),
+					}))
+				)
+			),
 			KeymapHints(n, { lines = signal.hints })
 		)
 	end
