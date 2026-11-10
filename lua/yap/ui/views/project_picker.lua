@@ -333,8 +333,10 @@ function M.open(opts)
 				end,
 			}),
 			n.columns({ flex = 1, gap = 2 },
-				n.rows({ flex = 1, gap = 1, border_style = "rounded", border_label = "Projects" },
+				n.rows({ flex = 1, gap = 1 },
 					SelectableList(n, {
+						border_style = "rounded",
+						border_label = "Projects",
 						data = signal.filtered,
 						hidden = signal.has_results:negate(),
 						on_change = function(node)
@@ -350,6 +352,8 @@ function M.open(opts)
 					}),
 					n.paragraph(style.with_defaults({
 						id = "project-empty-message",
+						border_style = "rounded",
+						border_label = "Projects",
 						size = 1,
 						is_focusable = false,
 						align = "left",
@@ -357,9 +361,11 @@ function M.open(opts)
 						hidden = signal.has_results,
 					}))
 				),
-				n.rows({ flex = 1.35, gap = 1, padding = { left = 1 }, border_style = "rounded", border_label = "Preview" },
+				n.rows({ flex = 1.35, gap = 1, padding = { left = 1 } },
 					n.paragraph(style.with_defaults({
 						id = "project-preview",
+						border_style = "rounded",
+						border_label = "Preview",
 						flex = 1,
 						is_focusable = false,
 						align = "left",
@@ -368,9 +374,11 @@ function M.open(opts)
 					}))
 				)
 			),
-			n.rows({ flex = 0, gap = 1, hidden = signal.has_readme:negate(), border_style = "rounded", border_label = "Description" },
+			n.rows({ flex = 0, gap = 1, hidden = signal.has_readme:negate() },
 				n.paragraph(style.with_defaults({
 					id = "project-description",
+					border_style = "rounded",
+					border_label = "Description",
 					is_focusable = false,
 					align = "left",
 					max_lines = 6,
