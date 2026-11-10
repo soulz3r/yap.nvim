@@ -239,9 +239,11 @@ function M.open(opts)
 
 	local function refresh_content()
 		local hints = signal.hints:get_value()
-		signal.preview_lines = preview_content .. (readme_content and "" or "\\n" .. hints)
-		signal.readme_lines = readme_content and (readme_content .. "\\n" .. hints) or ""
+		signal.preview_lines = preview_content .. (readme_content and "" or "\n" .. hints)
+		signal.readme_lines = readme_content and (readme_content .. "\n" .. hints) or ""
 	end
+
+	refresh_content()
 
 	local function update_preview(project)
 		signal.selected_path = project and project.root or ""
@@ -387,7 +389,7 @@ function M.open(opts)
 				id = "project-description",
 				is_focusable = false,
 				align = "left",
-				max_lines = 6,
+				max_lines = 9,
 				truncate = true,
 				lines = signal.readme_lines,
 				hidden = signal.has_readme:negate(),
