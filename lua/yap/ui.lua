@@ -24,7 +24,7 @@ local default_highlights = {
 	success = { link = "DiagnosticOk" },
 	warning = { link = "DiagnosticWarn" },
 	error = { link = "DiagnosticError" },
-	command = { link = "Statement" },
+	command = { link = "Identifier" },
 	path = { link = "Directory" },
 	phase = { link = "Title" },
 	metadata = { link = "Comment" },
