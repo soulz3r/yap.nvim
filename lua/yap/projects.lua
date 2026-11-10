@@ -233,15 +233,17 @@ local function open_output(root, title, initial_section)
 			group = "YapMetadata"
 		elseif trimmed:match("^BUILD$") or trimmed:match("^CLEAN$")
 			or trimmed:match("^EXECUTION$") or trimmed:match("^PROJECT$")
-			or trimmed:match("^BUILD RESULT$") or trimmed:match("^CLEAN RESULT$")
-			or trimmed:match("^EXECUTION RESULT$") or trimmed:match("^Action:")
+			or trimmed:match("^RUN SUMMARY$")
+			or trimmed:match("^Build%s+SUCCESS") or trimmed:match("^Run%s+SUCCESS")
+			or trimmed:match("^Clean%s+SUCCESS") or trimmed:match("^Build%s+FAILED")
+			or trimmed:match("^Run%s+FAILED") or trimmed:match("^Clean%s+FAILED")
 		then
 			group = "YapPhase"
-		elseif trimmed:match("^Status: SUCCESS$") or trimmed:match("succeeded")
+		elseif trimmed:match("SUCCESS") or trimmed:match("succeeded")
 			or trimmed:match("successfully") or trimmed:match("^Build completed")
 		then
 			group = "YapSuccess"
-		elseif trimmed:match("^Status: FAILED$") or trimmed:match("failed") or trimmed:match("Could not")
+		elseif trimmed:match("FAILED") or trimmed:match("failed") or trimmed:match("Could not")
 			or trimmed:match("No supported") or trimmed:match("No .* found")
 		then
 			group = "YapError"
@@ -572,12 +574,14 @@ local function open_output(root, title, initial_section)
 	})
 
 	append({
-		"YAP PROJECT RUNNER",
+		"YAP / PROJECT RUNNER",
 		separator,
-		"Project: " .. vim.fn.fnamemodify(root, ":t"),
-		"Root: " .. root,
-		"Platform: " .. (paths.is_windows and "Windows" or "Unix"),
-		"Started: " .. os.date("%Y-%m-%d %H:%M:%S"),
+		"PROJECT",
+		"  Name       " .. vim.fn.fnamemodify(root, ":t"),
+		"  Root       " .. root,
+		"  Platform   " .. (paths.is_windows and "Windows" or "Unix"),
+		"  Started    " .. os.date("%Y-%m-%d %H:%M:%S"),
+		"",
 		section_separator(initial_section or "PROJECT"),
 	})
 
@@ -585,13 +589,16 @@ local function open_output(root, title, initial_section)
 end
 
 local function result_lines(ok, code, elapsed, subject)
-	return {
+	local status = ok and "SUCCESS" or "FAILED"
+	local label = subject == "EXECUTION" and "Run" or subject:sub(1, 1) .. subject:sub(2):lower()
+	local lines = {
 		"",
-		subject .. " RESULT",
-		"Status: " .. (ok and "SUCCESS" or "FAILED"),
-		"Exit code: " .. tostring(code),
-		string.format("Duration: %.2fs", elapsed),
+		string.format("%-12s  %-8s  %6.2fs", label, status, elapsed),
 	}
+	if not ok then
+		lines[#lines + 1] = "Exit code: " .. tostring(code)
+	end
+	return lines
 end
 
 local function run_command(command, root, append, callback, output_label)
@@ -747,7 +754,7 @@ local function launch(file, root, append, args)
 
 	local started = run_command(command, root, append, function(code, elapsed)
 		append(result_lines(code == 0, code, elapsed, "EXECUTION"))
-	end, "PROGRAM OUTPUT")
+	end, "OUTPUT")
 
 	if started then
 		last_runs[vim.fs.normalize(root)] = state
@@ -769,7 +776,7 @@ local function build(root, append, callback, selected_script)
 	run_command(command, root, append, function(code, elapsed)
 		append(result_lines(code == 0, code, elapsed, "BUILD"))
 		callback(code == 0)
-	end, "BUILD OUTPUT")
+	end, "OUTPUT")
 end
 
 local function clean(root, append, callback)
@@ -795,7 +802,7 @@ local function clean(root, append, callback)
 	run_command(command, root, append, function(code, elapsed)
 		append(result_lines(code == 0, code, elapsed, "CLEAN"))
 		callback(code == 0, true)
-	end, "CLEAN OUTPUT")
+	end, "OUTPUT")
 end
 
 function M.stop()
