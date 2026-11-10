@@ -398,18 +398,18 @@ function M.setup(opts)
 	})
 
 	if opts.keymaps ~= false then
-	vim.keymap.set("n", "<leader>pp", function()
-		telescope.extensions.project.project()
-	end, map_opts("Projects"))
+		vim.keymap.set("n", "<leader>pp", function()
+			telescope.extensions.project.project()
+		end, map_opts("Projects"))
 
-	vim.keymap.set("n", "<leader>pr", open_project_run_picker, map_opts("Build and run C project"))
-	vim.keymap.set("n", "<leader>pb", projects.build, map_opts("Build C project"))
-	vim.keymap.set("n", "<leader>pc", projects.clean, map_opts("Clean C project"))
-	vim.keymap.set("n", "<leader>pB", projects.rebuild, map_opts("Clean and rebuild C project"))
-	vim.keymap.set("n", "<leader>pS", open_build_script_picker, map_opts("Select project build script"))
-	vim.keymap.set("n", "<leader>pe", open_executable_picker, map_opts("Run project executable"))
-	vim.keymap.set("n", "<leader>ps", projects.stop, map_opts("Stop project process"))
-	vim.keymap.set("n", "<leader>pR", projects.rerun, map_opts("Rerun last executable"))
+		vim.keymap.set("n", "<leader>pr", open_project_run_picker, map_opts("Build and run C project"))
+		vim.keymap.set("n", "<leader>pb", projects.build, map_opts("Build C project"))
+		vim.keymap.set("n", "<leader>pc", projects.clean, map_opts("Clean C project"))
+		vim.keymap.set("n", "<leader>pB", projects.rebuild, map_opts("Clean and rebuild C project"))
+		vim.keymap.set("n", "<leader>pS", open_build_script_picker, map_opts("Select project build script"))
+		vim.keymap.set("n", "<leader>pe", open_executable_picker, map_opts("Run project executable"))
+		vim.keymap.set("n", "<leader>ps", projects.stop, map_opts("Stop project process"))
+		vim.keymap.set("n", "<leader>pR", projects.rerun, map_opts("Rerun last executable"))
 	end
 end
 
