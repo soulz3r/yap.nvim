@@ -372,9 +372,9 @@ function M.open(opts)
 					})),
 					n.paragraph(style.with_defaults({
 						id = "project-preview",
+						flex = 1,
 						is_focusable = false,
 						align = "left",
-						max_lines = 18,
 						truncate = true,
 						lines = signal.preview_lines,
 					}))
