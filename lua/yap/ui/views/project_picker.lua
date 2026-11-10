@@ -377,7 +377,7 @@ function M.open(opts)
 						max_lines = 18,
 						truncate = true,
 						lines = signal.preview_lines,
-					})),
+					}))
 				)
 			),
 			n.rows({ flex = 0, gap = 1, hidden = signal.has_readme:negate() },
