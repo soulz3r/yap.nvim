@@ -333,8 +333,9 @@ function M.open(opts)
 					choose(selected_path())
 				end,
 			}),
-			n.columns({ flex = 1, gap = 2 },
-				n.rows({ flex = 1, gap = 1 },
+			n.gap(1),
+			n.columns({ flex = 1 },
+				n.rows({ flex = 1 },
 					SelectableList(n, {
 						border_style = "rounded",
 						border_label = "Projects",
@@ -351,6 +352,7 @@ function M.open(opts)
 							end
 						end,
 					}),
+					n.gap(1),
 					n.paragraph(style.with_defaults({
 						id = "project-empty-message",
 						border_style = "rounded",
@@ -362,7 +364,7 @@ function M.open(opts)
 						hidden = signal.has_results,
 					}))
 				),
-				n.rows({ flex = 1.35, gap = 1, padding = { left = 1 } },
+				n.rows({ flex = 1.35, padding = { left = 1 } },
 					n.paragraph(style.with_defaults({
 						id = "project-preview",
 						border_style = "rounded",
@@ -375,7 +377,8 @@ function M.open(opts)
 					}))
 				)
 			),
-			n.rows({ flex = 0, gap = 1, hidden = signal.has_readme:negate() },
+			n.gap(1),
+			n.rows({ flex = 0, hidden = signal.has_readme:negate() },
 				n.paragraph(style.with_defaults({
 					id = "project-description",
 					border_style = "rounded",
@@ -387,6 +390,7 @@ function M.open(opts)
 					lines = signal.readme_lines,
 				}))
 			),
+			n.gap(1),
 			KeymapHints(n, { lines = signal.hints })
 		)
 	end
