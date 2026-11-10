@@ -162,13 +162,12 @@ end
 
 local function section_separator(label)
 	local width = output_width or vim.o.columns
-	local inner_width = math.max(0, width - 2)
 	local text = " " .. label .. " "
-	local remaining = math.max(0, inner_width - vim.fn.strdisplaywidth(text))
+	local remaining = math.max(0, width - vim.fn.strdisplaywidth(text))
 	local left = math.floor(remaining / 2)
 	local right = remaining - left
 
-	return "├" .. string.rep("─", left) .. text .. string.rep("─", right) .. "┤"
+	return string.rep("─", left) .. text .. string.rep("─", right)
 end
 
 local function open_output(root, title, initial_section)
@@ -197,9 +196,7 @@ local function open_output(root, title, initial_section)
 
 	local content_width = vim.api.nvim_win_get_width(win)
 	output_width = content_width
-	local separator = content_width > 1
-		and ("├" .. string.rep("─", content_width - 2) .. "┤")
-		or string.rep("─", content_width)
+	local separator = string.rep("─", content_width)
 
 	vim.bo[buf].buftype = "nofile"
 	vim.bo[buf].bufhidden = "wipe"
@@ -218,9 +215,9 @@ local function open_output(root, title, initial_section)
 
 		if trimmed == "YAP PROJECT RUNNER" then
 			group = "YapPhase"
-		elseif trimmed:match("^├─+ .- ─*┤$") then
+		elseif trimmed:match("^─+ .- ─*$") then
 			group = "YapPhase"
-		elseif trimmed:match("^├─+┤$") or trimmed:match("^─+$") then
+		elseif trimmed:match("^─+$") then
 			group = "YapMuted"
 		elseif trimmed:match("^%$ ") or trimmed:match("^Command:") then
 			group = "YapCommand"
@@ -585,14 +582,14 @@ local function open_output(root, title, initial_section)
 	return append
 end
 
-local function result_line(message, elapsed)
-	local duration = string.format("Duration: %.2fs", elapsed)
-	local padding = math.max(
-		1,
-		(output_width or vim.o.columns) - vim.fn.strdisplaywidth(message) - vim.fn.strdisplaywidth(duration)
-	)
-
-	return message .. string.rep(" ", padding) .. duration
+local function result_lines(ok, code, elapsed, subject)
+	return {
+		"",
+		subject .. " RESULT",
+		"Status: " .. (ok and "SUCCESS" or "FAILED"),
+		"Exit code: " .. tostring(code),
+		string.format("Duration: %.2fs", elapsed),
+	}
 end
 
 local function run_command(command, root, append, callback)
@@ -602,7 +599,7 @@ local function run_command(command, root, append, callback)
 	end
 
 	active_job = nil
-	append({ "", "EXECUTING", "Command: " .. table.concat(command, " ") })
+	append({ "", "Command: " .. table.concat(command, " ") })
 	local started_at = vim.uv.hrtime()
 
 	local job = vim.fn.jobstart(command, {
@@ -677,7 +674,10 @@ local function get_build_command(root, append, selected_script)
 		return nil
 	end
 
-	append({ "Build script: " .. script })
+	append({
+		"Action: Compile project",
+		"Build script: " .. script,
+	})
 	return command
 end
 
@@ -730,6 +730,7 @@ local function launch(file, root, append, args)
 
 	append({
 		"",
+		"Action: Run project executable",
 		"Executable: " .. vim.fn.fnamemodify(file, ":t"),
 		"Path: " .. file,
 		"Arguments: " .. (#(args or {}) > 0 and table.concat(args, " ") or "(none)"),
@@ -739,13 +740,7 @@ local function launch(file, root, append, args)
 	vim.list_extend(command, args or {})
 
 	local started = run_command(command, root, append, function(code, elapsed)
-		append({
-			"",
-			result_line(
-				code == 0 and "Process finished successfully." or string.format("Process exited with code %d.", code),
-				elapsed
-			),
-		})
+		append(result_lines(code == 0, code, elapsed, "EXECUTION"))
 	end)
 
 	if started then
@@ -766,13 +761,8 @@ local function build(root, append, callback, selected_script)
 	end
 
 	run_command(command, root, append, function(code, elapsed)
-		if code == 0 then
-			append({ "", result_line("Build succeeded.", elapsed) })
-			callback(true)
-		else
-			append({ "", result_line(string.format("Build failed. Exit code: %d.", code), elapsed) })
-			callback(false)
-		end
+		append(result_lines(code == 0, code, elapsed, "BUILD"))
+		callback(code == 0)
 	end)
 end
 
@@ -792,14 +782,12 @@ local function clean(root, append, callback)
 		return
 	end
 
-	append({ "Clean script: " .. script })
+	append({
+		"Action: Remove generated build artifacts",
+		"Clean script: " .. script,
+	})
 	run_command(command, root, append, function(code, elapsed)
-		if code == 0 then
-			append({ result_line("Clean succeeded.", elapsed) })
-		else
-			append({ result_line(string.format("Clean failed. Exit code: %d.", code), elapsed) })
-		end
-
+		append(result_lines(code == 0, code, elapsed, "CLEAN"))
 		callback(code == 0, true)
 	end)
 end
