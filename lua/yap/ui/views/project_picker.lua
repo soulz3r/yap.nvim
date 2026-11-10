@@ -168,6 +168,16 @@ function M.open(opts)
 	})
 
 	local renderer = layout.create_renderer(opts)
+
+	local function focus_input()
+		vim.schedule(function()
+			local input = renderer:get_component_by_id("project-search")
+			if input and not input:is_focused() then
+				input:focus()
+			end
+		end)
+	end
+
 	local function update_description(project)
 		signal.selected_path = project and project.root or ""
 
@@ -277,10 +287,12 @@ function M.open(opts)
 				Panel({
 					flex = 1,
 					border_label = { text = "Projects", align = "left" },
+					on_focus = focus_input,
 				},
 					SelectableList(n, {
 						data = signal.filtered,
 						hidden = signal.has_results:negate(),
+						on_focus = focus_input,
 						on_change = function(node)
 							if node then
 								update_description(find_project(entries, node.path))
@@ -298,17 +310,19 @@ function M.open(opts)
 						align = "center",
 						lines = signal.empty_message,
 						hidden = signal.has_results,
+						on_focus = focus_input,
 					}))
 				),
 				Panel({
 					flex = 1,
 					border_label = { text = "Description", align = "left" },
 					hidden = signal.has_readme:negate(),
+					on_focus = focus_input,
 				},
-					Description(n, { lines = signal.readme_lines })
+					Description(n, { lines = signal.readme_lines, on_focus = focus_input })
 				)
 			),
-			KeymapHints(n, { lines = signal.hints })
+			KeymapHints(n, { lines = signal.hints, on_focus = focus_input })
 		)
 	end
 
