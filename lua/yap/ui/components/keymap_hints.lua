@@ -5,7 +5,12 @@ return function(n, props)
 		id = "project-keymap-hints",
 		size = 1,
 		is_focusable = false,
-		align = "left",
+		align = "right",
+		window = {
+			highlight = {
+				NormalFloat = "Normal",
+			},
+		},
 		max_lines = 1,
 		truncate = true,
 	}, props))
