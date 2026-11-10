@@ -31,12 +31,30 @@ With lazy.nvim:
     require("yap").setup({
       projects_dir = vim.fn.expand("~/projects"),
       telescope = true,
+      highlights = {
+        normal = { fg = "#D3C6AA", bg = "NONE" },
+        border = { fg = "#859289", bg = "NONE" },
+        title = { fg = "#A7C080", bg = "NONE", bold = true },
+        section_title = { fg = "#A7C080", bold = true },
+        muted = { fg = "#859289" },
+        success = { fg = "#A7C080" },
+        warning = { fg = "#DBBC7F" },
+        error = { fg = "#E67E80" },
+      },
     })
   end,
 }
 ```
 
 Set `projects_dir` to your project directory. If omitted, YAP uses `PROJECTS_DIR`, `D:/config/projects` on Windows, or `~/projects` elsewhere. Set `telescope = false` to use the core without Telescope.
+
+## Colors
+
+YAP exposes a `highlights` option in `setup()`. Each entry accepts the same highlight options as `vim.api.nvim_set_hl()`, including `fg`, `bg`, `bold`, `italic`, and `link`. Colors are reapplied after every `ColorScheme` event.
+
+Available keys are `normal`, `border`, `title`, `section_title`, `muted`, `success`, `warning`, and `error`. Omit any key to keep its default link to the corresponding Neovim highlight group. Use `bg = "NONE"` for transparent float content and borders.
+
+The float uses the plugin-owned `YapFloatNormal`, `YapFloatBorder`, and `YapFloatTitle` groups, so its appearance can be customized without changing global Neovim highlights.
 
 ## Keymaps
 
