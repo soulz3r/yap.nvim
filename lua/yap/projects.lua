@@ -18,6 +18,7 @@ local root_markers = {
 
 local active_job
 local last_runs = {}
+local output_width
 
 local function run_records_path()
 	local directory = vim.fn.stdpath("data") .. "/yap/project-runs"
@@ -184,6 +185,7 @@ local function open_output(root, title)
 	vim.wo[win].statuscolumn = ""
 
 	local content_width = vim.api.nvim_win_get_width(win)
+	output_width = content_width
 	local separator = content_width > 1
 		and ("├" .. string.rep("─", content_width - 2) .. "┤")
 		or string.rep("─", content_width)
@@ -570,6 +572,16 @@ local function open_output(root, title)
 	return append
 end
 
+local function result_line(message, elapsed)
+	local duration = string.format("Duration: %.2fs", elapsed)
+	local padding = math.max(
+		1,
+		(output_width or vim.o.columns) - vim.fn.strdisplaywidth(message) - vim.fn.strdisplaywidth(duration)
+	)
+
+	return message .. string.rep(" ", padding) .. duration
+end
+
 local function run_command(command, root, append, callback)
 	if active_job and vim.fn.jobwait({ active_job }, 0)[1] == -1 then
 		append({ "", "Another project process is already running.", "Stop it before starting another." })
@@ -738,10 +750,10 @@ local function build(root, append, callback, selected_script)
 
 	run_command(command, root, append, function(code, elapsed)
 		if code == 0 then
-			append({ "", string.format("Build succeeded. · Duration: %.2fs", elapsed) })
+			append({ "", result_line("Build succeeded.", elapsed) })
 			callback(true)
 		else
-			append({ "", string.format("Build failed. Exit code: %d · Duration: %.2fs", code, elapsed) })
+			append({ "", result_line(string.format("Build failed. Exit code: %d.", code), elapsed) })
 			callback(false)
 		end
 	end)
@@ -766,9 +778,9 @@ local function clean(root, append, callback)
 	append({ "Clean script: " .. script })
 	run_command(command, root, append, function(code, elapsed)
 		if code == 0 then
-			append({ string.format("Clean succeeded. · Duration: %.2fs", elapsed) })
+			append({ result_line("Clean succeeded.", elapsed) })
 		else
-			append({ string.format("Clean failed. Exit code: %d · Duration: %.2fs", code, elapsed) })
+			append({ result_line(string.format("Clean failed. Exit code: %d.", code), elapsed) })
 		end
 
 		callback(code == 0, true)
