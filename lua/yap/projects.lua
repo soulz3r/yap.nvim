@@ -594,14 +594,18 @@ local function result_lines(ok, code, elapsed, subject)
 	}
 end
 
-local function run_command(command, root, append, callback)
+local function run_command(command, root, append, callback, output_label)
 	if active_job and vim.fn.jobwait({ active_job }, 0)[1] == -1 then
 		append({ "", "Another project process is already running.", "Stop it before starting another." })
 		return false
 	end
 
 	active_job = nil
-	append({ "", "Command: " .. table.concat(command, " ") })
+	append({
+		"",
+		"Command: " .. table.concat(command, " "),
+		section_separator(output_label or "PROCESS OUTPUT"),
+	})
 	local started_at = vim.uv.hrtime()
 
 	local job = vim.fn.jobstart(command, {
@@ -743,7 +747,7 @@ local function launch(file, root, append, args)
 
 	local started = run_command(command, root, append, function(code, elapsed)
 		append(result_lines(code == 0, code, elapsed, "EXECUTION"))
-	end)
+	end, "PROGRAM OUTPUT")
 
 	if started then
 		last_runs[vim.fs.normalize(root)] = state
@@ -765,7 +769,7 @@ local function build(root, append, callback, selected_script)
 	run_command(command, root, append, function(code, elapsed)
 		append(result_lines(code == 0, code, elapsed, "BUILD"))
 		callback(code == 0)
-	end)
+	end, "BUILD OUTPUT")
 end
 
 local function clean(root, append, callback)
@@ -791,7 +795,7 @@ local function clean(root, append, callback)
 	run_command(command, root, append, function(code, elapsed)
 		append(result_lines(code == 0, code, elapsed, "CLEAN"))
 		callback(code == 0, true)
-	end)
+	end, "CLEAN OUTPUT")
 end
 
 function M.stop()
