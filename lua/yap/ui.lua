@@ -51,6 +51,9 @@ local function apply_highlights(highlights)
 	for name, group in pairs(highlight_groups) do
 		vim.api.nvim_set_hl(0, group, highlights[name])
 	end
+
+	vim.api.nvim_set_hl(0, "NuiComponentsTreeNodeFocused", { link = "YapSectionTitle" })
+	vim.api.nvim_set_hl(0, "NuiComponentsPromptPrefix", { link = "YapMuted" })
 end
 
 function M.apply(win)
@@ -121,7 +124,7 @@ end
 
 ---@param buf integer
 ---@param opts table|nil
----@return table renderer, integer win
+---@return table renderer
 function M.open_buffer(buf, opts)
 	opts = opts or {}
 
@@ -132,6 +135,29 @@ function M.open_buffer(buf, opts)
 		position = "50%",
 		relative = "editor",
 	})
+
+	renderer:on_mount(function()
+		local component = renderer:get_component_by_id("yap-buffer")
+		local win = component and component.winid
+
+		if not win or not vim.api.nvim_win_is_valid(win) then
+			vim.notify("YAP: NuiComponents could not mount the output window.", vim.log.levels.ERROR)
+			renderer:close()
+			return
+		end
+
+		vim.wo[win].number = false
+		vim.wo[win].relativenumber = false
+		vim.wo[win].signcolumn = "no"
+		vim.wo[win].foldcolumn = "0"
+		vim.wo[win].statuscolumn = ""
+		vim.wo[win].wrap = opts.wrap ~= false
+		vim.wo[win].cursorline = opts.cursorline ~= false
+
+		if opts.on_mount then
+			opts.on_mount(renderer, win)
+		end
+	end)
 
 	renderer:render(function()
 		return n.buffer({
@@ -154,22 +180,7 @@ function M.open_buffer(buf, opts)
 		})
 	end)
 
-	local component = renderer:get_component_by_id("yap-buffer")
-	local win = component and component.winid
-	if not win or not vim.api.nvim_win_is_valid(win) then
-		renderer:close()
-		error("YAP: NuiComponents did not create the buffer window")
-	end
-
-	vim.wo[win].number = false
-	vim.wo[win].relativenumber = false
-	vim.wo[win].signcolumn = "no"
-	vim.wo[win].foldcolumn = "0"
-	vim.wo[win].statuscolumn = ""
-	vim.wo[win].wrap = opts.wrap ~= false
-	vim.wo[win].cursorline = opts.cursorline ~= false
-
-	return renderer, win
+	return renderer
 end
 
 function M.open_text(lines, title, opts)
@@ -182,11 +193,12 @@ function M.open_text(lines, title, opts)
 	vim.bo[buf].filetype = opts.filetype or "text"
 	vim.bo[buf].modifiable = false
 
-	local renderer, win = M.open_buffer(buf, {
+	local renderer = M.open_buffer(buf, {
 		width = opts.width or math.floor(vim.o.columns * 0.72),
 		height = opts.height or math.min(#lines + 2, math.floor(vim.o.lines * 0.62)),
 		title = title,
 		wrap = opts.wrap == true,
+		cursorline = true,
 	})
 
 	local function close()
@@ -206,7 +218,7 @@ function M.open_text(lines, title, opts)
 		desc = "Close YAP window",
 	})
 
-	return buf, win, renderer
+	return buf, renderer
 end
 
 return M

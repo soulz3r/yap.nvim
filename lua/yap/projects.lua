@@ -184,15 +184,19 @@ local function open_output(root, title, initial_section)
 	vim.bo[buf].readonly = true
 	vim.bo[buf].modifiable = false
 
-	local renderer, win = ui.open_buffer(buf, {
+	local win
+	local renderer = ui.open_buffer(buf, {
 		width = width,
 		height = height,
 		title = title,
 		wrap = true,
 		cursorline = true,
 		autoscroll = true,
+		on_mount = function(_, mounted_win)
+			win = mounted_win
+		end,
 	})
-	local content_width = math.max(1, vim.api.nvim_win_get_width(win) - 2)
+	local content_width = math.max(1, width - 2)
 	output_width = content_width
 	local separator = string.rep("─", content_width)
 
@@ -469,7 +473,7 @@ local function open_output(root, title, initial_section)
 		vim.bo[buf].modifiable = false
 		vim.bo[buf].readonly = true
 
-		if vim.api.nvim_win_is_valid(win) then
+		if win and vim.api.nvim_win_is_valid(win) then
 			local line_count = vim.api.nvim_buf_line_count(buf)
 			vim.api.nvim_win_set_cursor(win, { line_count, 0 })
 		end

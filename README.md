@@ -52,7 +52,7 @@ NuiComponents is used for YAP's floating output and C/C++ project-information vi
 
 ## UI
 
-YAP uses NuiComponents renderers for its floating buffer views. The process-output buffer remains a normal Neovim buffer, so ANSI parsing, compiler diagnostics, quickfix extraction, and streaming process output stay in YAP's existing project engine. NuiComponents owns the floating layout, border, and buffer presentation.
+YAP uses NuiComponents for its floating views and the C-project switcher. The process-output buffer remains a normal Neovim buffer, so ANSI parsing, compiler diagnostics, quickfix extraction, and streaming process output stay in YAP's existing project engine. The project switcher uses reusable input, list, panel, README-preview, and keymap-hint components.
 
 ## Colors
 

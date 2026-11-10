@@ -398,10 +398,6 @@ function M.setup(opts)
 	})
 
 	if opts.keymaps ~= false then
-		vim.keymap.set("n", "<leader>pp", function()
-			telescope.extensions.project.project()
-		end, map_opts("Projects"))
-
 		vim.keymap.set("n", "<leader>pr", open_project_run_picker, map_opts("Build and run C project"))
 		vim.keymap.set("n", "<leader>pb", projects.build, map_opts("Build C project"))
 		vim.keymap.set("n", "<leader>pc", projects.clean, map_opts("Clean C project"))
