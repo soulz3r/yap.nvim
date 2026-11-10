@@ -52,7 +52,7 @@ Set `projects_dir` to your project directory. If omitted, YAP uses `PROJECTS_DIR
 
 YAP exposes a `highlights` option in `setup()`. Each entry accepts the same highlight options as `vim.api.nvim_set_hl()`, including `fg`, `bg`, `bold`, `italic`, and `link`. Colors are reapplied after every `ColorScheme` event.
 
-Available keys are `normal`, `border`, `title`, `section_title`, `muted`, `success`, `warning`, and `error`. Omit any key to keep its default link to the corresponding Neovim highlight group. Use `bg = "NONE"` for transparent float content and borders.
+Available keys are `normal`, `border`, `title`, `section_title`, `muted`, `success`, `warning`, `error`, `command`, `path`, `phase`, `metadata`, and `diagnostic`. Omit any key to keep its default link to the corresponding Neovim highlight group. Use `bg = "NONE"` for transparent float content and borders.
 
 The float uses the plugin-owned `YapFloatNormal`, `YapFloatBorder`, and `YapFloatTitle` groups, so its appearance can be customized without changing global Neovim highlights.
 
