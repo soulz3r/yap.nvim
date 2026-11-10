@@ -151,7 +151,7 @@ end
 local function to_lines(text)
 	local lines = {}
 
-	for _, value in ipairs(vim.split(text or "", "\\n", { plain = true })) do
+	for _, value in ipairs(vim.split(text or "", "\n", { plain = true, trimempty = false })) do
 		local line = Line()
 		line:append(value)
 		lines[#lines + 1] = line
@@ -180,15 +180,6 @@ function M.open(opts)
 	})
 
 	local renderer = layout.create_renderer(opts)
-
-	local function focus_input()
-		vim.schedule(function()
-			local input = renderer:get_component_by_id("project-search")
-			if input and not input:is_focused() then
-				input:focus()
-			end
-		end)
-	end
 
 	local function update_description(project)
 		signal.selected_path = project and project.root or ""
@@ -285,29 +276,10 @@ function M.open(opts)
 				on_submit = function()
 					choose(selected_path())
 				end,
-				on_focus = function(component)
-					signal.input_focused = true
-					signal.mode = "normal"
-					signal.hints = to_lines(hints_for("normal"))
-
-					vim.schedule(function()
-						vim.schedule(function()
-							if component:is_focused() then
-								vim.cmd("stopinsert")
-							end
-						end)
-					end)
-				end,
-				on_blur = function()
-					signal.input_focused = false
-					signal.mode = "normal"
-					signal.hints = to_lines(hints_for("normal"))
-				end,
 			}),
 			SelectableList(n, {
 				data = signal.filtered,
 				hidden = signal.has_results:negate(),
-				on_focus = focus_input,
 				on_change = function(node)
 					if node then
 						update_description(find_project(entries, node.path))
