@@ -190,11 +190,6 @@ local function open_output(root, title)
 	vim.wo[win].cursorline = true
 	floats.apply(win)
 
-	local semantic_patterns = {
-		{ pattern = "^%s*[%w /+_-]+ PHASE%s*$", group = "YapPhase" },
-		{ pattern = "^%s*[%w /+_-]+%s*$", group = nil },
-	}
-
 	local function apply_semantic_highlight(line, row)
 		local trimmed = vim.trim(line)
 		local group
