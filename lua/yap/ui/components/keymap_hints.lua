@@ -8,6 +8,5 @@ return function(n, props)
 		align = "left",
 		max_lines = 1,
 		truncate = true,
-		border_style = "none",
 	}, props))
 end
