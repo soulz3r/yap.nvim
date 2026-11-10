@@ -160,7 +160,18 @@ local function script_command(script)
 	return { shell, "./" .. script }
 end
 
-local function open_output(root, title)
+local function section_separator(label)
+	local width = output_width or vim.o.columns
+	local inner_width = math.max(0, width - 2)
+	local text = " " .. label .. " "
+	local remaining = math.max(0, inner_width - vim.fn.strdisplaywidth(text))
+	local left = math.floor(remaining / 2)
+	local right = remaining - left
+
+	return "├" .. string.rep("─", left) .. text .. string.rep("─", right) .. "┤"
+end
+
+local function open_output(root, title, initial_section)
 	local floats = require("yap.ui")
 	local output_lines = {}
 	local buf = vim.api.nvim_create_buf(false, true)
@@ -206,6 +217,8 @@ local function open_output(root, title)
 		local group
 
 		if trimmed == "YAP PROJECT RUNNER" then
+			group = "YapPhase"
+		elseif trimmed:match("^├─+ .- ─*┤$") then
 			group = "YapPhase"
 		elseif trimmed:match("^├─+┤$") or trimmed:match("^─+$") then
 			group = "YapMuted"
@@ -566,7 +579,7 @@ local function open_output(root, title)
 		"Root: " .. root,
 		"Platform: " .. (paths.is_windows and "Windows" or "Unix"),
 		"Started: " .. os.date("%Y-%m-%d %H:%M:%S"),
-		separator,
+		section_separator(initial_section or "PROJECT"),
 	})
 
 	return append
@@ -799,16 +812,14 @@ end
 
 function M.build(path, selected_script)
 	local root = project_root(path)
-	local append = open_output(root, "Build Project")
-	append({ "", "BUILD" })
+	local append = open_output(root, "Build Project", "BUILD")
 
 	build(root, append, function() end, selected_script)
 end
 
 function M.clean(path)
 	local root = project_root(path)
-	local append = open_output(root, "Clean Project")
-	append({ "", "CLEAN" })
+	local append = open_output(root, "Clean Project", "CLEAN")
 
 	clean(root, append, function(ok, found)
 		if not found then
@@ -819,23 +830,21 @@ end
 
 function M.rebuild(path)
 	local root = project_root(path)
-	local append = open_output(root, "Rebuild Project")
-	append({ "", "CLEAN" })
+	local append = open_output(root, "Rebuild Project", "CLEAN")
 
 	clean(root, append, function(ok, found)
 		if found and not ok then
 			return
 		end
 
-		append({ "", "BUILD" })
+		append({ "", section_separator("BUILD") })
 		build(root, append, function() end)
 	end)
 end
 
 function M.run(path, args, selected_script)
 	local root = project_root(path)
-	local append = open_output(root, "Run Executable")
-	append({ "", "BUILD" })
+	local append = open_output(root, "Run Executable", "BUILD")
 
 	build(root, append, function(ok)
 		if not ok then
@@ -867,7 +876,7 @@ function M.run(path, args, selected_script)
 			return
 		end
 
-		append({ "", "EXECUTION" })
+		append({ "", section_separator("EXECUTION") })
 		launch(executable, root, append, args)
 	end, selected_script)
 end
@@ -967,7 +976,7 @@ function M.parse_args(input)
 end
 
 function M.run_binary(file, root, args)
-	local append = open_output(root, "Run Executable")
+	local append = open_output(root, "Run Executable", "EXECUTION")
 	launch(file, root, append, args)
 end
 
