@@ -236,6 +236,27 @@ function M.open(opts)
 	local preview_content = preview_for(first)
 	local readme_content = initial_readme
 	local current_hints = hints_for("normal")
+	local preview_component
+	local description_component
+
+	local function refresh_footers()
+		vim.schedule(function()
+			local has_readme = readme_content ~= nil
+
+			local function set_footer(component, value)
+				if component and component.winid and vim.api.nvim_win_is_valid(component.winid) then
+					vim.api.nvim_win_set_config(component.winid, {
+						footer = value,
+						footer_pos = "right",
+					})
+				end
+			end
+
+			set_footer(preview_component, has_readme and "" or current_hints)
+			set_footer(description_component, has_readme and current_hints or "")
+		end)
+	end
+
 	local renderer = layout.create_renderer(opts)
 
 	local signal = n.create_signal({
@@ -254,6 +275,7 @@ function M.open(opts)
 		signal.description_lines = description_lines(n, readme_content)
 		signal.has_readme = readme_content ~= nil
 		signal.hints = current_hints
+		refresh_footers()
 	end
 
 	local function update_preview(project)
@@ -407,14 +429,6 @@ function M.open(opts)
 				hidden = signal.has_readme:negate(),
 			})),
 
-			n.paragraph(style.with_defaults({
-				id = "project-keymap-hints",
-				size = 1,
-				is_focusable = false,
-				align = "right",
-				truncate = true,
-				lines = signal.hints,
-			}))
 		)
 	end
 
@@ -485,6 +499,12 @@ function M.open(opts)
 			handler = close,
 		},
 	})
+
+	renderer:on_mount(function()
+		preview_component = renderer:get_component_by_id("project-preview")
+		description_component = renderer:get_component_by_id("project-description")
+		refresh_footers()
+	end)
 
 	renderer:render(body)
 	return renderer
