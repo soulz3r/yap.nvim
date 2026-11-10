@@ -101,22 +101,57 @@ function M.setup(highlights)
 	})
 end
 
-function M.centered(width, height, title)
-	local columns, lines = vim.o.columns, vim.o.lines
-	width = math.max(1, math.min(width or math.floor(columns * 0.72), columns - 4))
-	height = math.max(1, math.min(height or math.floor(lines * 0.62), lines - 4))
+---@param buf integer
+---@param opts table|nil
+---@return table renderer, integer win
+function M.open_buffer(buf, opts)
+	opts = opts or {}
 
-	return {
+	local n = require("nui-components")
+	local renderer = n.create_renderer({
+		width = opts.width or math.floor(vim.o.columns * 0.72),
+		height = opts.height or math.floor(vim.o.lines * 0.62),
+		position = "50%",
 		relative = "editor",
-		style = "minimal",
-		border = M.border,
-		title = title and (" " .. title .. " ") or nil,
-		title_pos = "center",
-		width = width,
-		height = height,
-		row = math.max(0, math.floor((lines - height) / 2) - 1),
-		col = math.max(0, math.floor((columns - width) / 2)),
-	}
+	})
+
+	renderer:render(function()
+		return n.buffer({
+			id = "yap-buffer",
+			buf = buf,
+			flex = 1,
+			autoscroll = opts.autoscroll == true,
+			linebreak = opts.wrap ~= false,
+			border_label = opts.title and {
+				text = opts.title,
+				align = "center",
+			} or nil,
+			border_style = "rounded",
+			window = {
+				highlight = {
+					Normal = "YapFloatNormal",
+					FloatBorder = "YapFloatBorder",
+				},
+			},
+		})
+	end)
+
+	local component = renderer:get_component_by_id("yap-buffer")
+	local win = component and component.winid
+	if not win or not vim.api.nvim_win_is_valid(win) then
+		renderer:close()
+		error("YAP: NuiComponents did not create the buffer window")
+	end
+
+	vim.wo[win].number = false
+	vim.wo[win].relativenumber = false
+	vim.wo[win].signcolumn = "no"
+	vim.wo[win].foldcolumn = "0"
+	vim.wo[win].statuscolumn = ""
+	vim.wo[win].wrap = opts.wrap ~= false
+	vim.wo[win].cursorline = opts.cursorline ~= false
+
+	return renderer, win
 end
 
 function M.open_text(lines, title, opts)
@@ -129,22 +164,31 @@ function M.open_text(lines, title, opts)
 	vim.bo[buf].filetype = opts.filetype or "text"
 	vim.bo[buf].modifiable = false
 
-	local width = opts.width or math.floor(vim.o.columns * 0.72)
-	local height = opts.height or math.min(#lines + 2, math.floor(vim.o.lines * 0.62))
-	local win = vim.api.nvim_open_win(buf, true, M.centered(width, height, title))
-	vim.wo[win].wrap = opts.wrap == true
-	vim.wo[win].cursorline = true
-	M.apply(win)
+	local renderer, win = M.open_buffer(buf, {
+		width = opts.width or math.floor(vim.o.columns * 0.72),
+		height = opts.height or math.min(#lines + 2, math.floor(vim.o.lines * 0.62)),
+		title = title,
+		wrap = opts.wrap == true,
+	})
 
 	local function close()
-		if vim.api.nvim_win_is_valid(win) then
-			vim.api.nvim_win_close(win, true)
-		end
+		renderer:close()
 	end
 
-	vim.keymap.set("n", "q", close, { buffer = buf, silent = true, nowait = true, desc = "Close YAP window" })
-	vim.keymap.set("n", "<Esc>", close, { buffer = buf, silent = true, nowait = true, desc = "Close YAP window" })
-	return buf, win
+	vim.keymap.set("n", "q", close, {
+		buffer = buf,
+		silent = true,
+		nowait = true,
+		desc = "Close YAP window",
+	})
+	vim.keymap.set("n", "<Esc>", close, {
+		buffer = buf,
+		silent = true,
+		nowait = true,
+		desc = "Close YAP window",
+	})
+
+	return buf, win, renderer
 end
 
 return M
