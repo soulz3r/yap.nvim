@@ -333,7 +333,6 @@ function M.open(opts)
 					choose(selected_path())
 				end,
 			}),
-			n.gap(1),
 			n.columns({ flex = 1 },
 				n.rows({ flex = 1 },
 					SelectableList(n, {
@@ -352,7 +351,6 @@ function M.open(opts)
 							end
 						end,
 					}),
-					n.gap(1),
 					n.paragraph(style.with_defaults({
 						id = "project-empty-message",
 						border_style = "rounded",
@@ -377,7 +375,6 @@ function M.open(opts)
 					}))
 				)
 			),
-			n.gap(1),
 			n.rows({ flex = 0, hidden = signal.has_readme:negate() },
 				n.paragraph(style.with_defaults({
 					id = "project-description",
@@ -390,7 +387,6 @@ function M.open(opts)
 					lines = signal.readme_lines,
 				}))
 			),
-			n.gap(1),
 			KeymapHints(n, { lines = signal.hints })
 		)
 	end
