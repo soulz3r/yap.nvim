@@ -1,2 +1,74 @@
 # yap.nvim
-yap implementation in neovim
+
+A small Neovim toolkit for C/C++ project workflows. YAP handles project detection, build scripts, execution, output, compiler diagnostics, and a Telescope Projects integration without depending on another user's config namespace.
+
+## Features
+
+- Detect project roots from Git, Make, CMake, and common build metadata.
+- Build using `build_all.bat`, `build.bat`, `build_all.sh`, or `build.sh`, with platform-aware priority.
+- Clean and rebuild using matching clean scripts.
+- Build and run the project-named executable from `bin/`.
+- Select and run other executables from `bin/`.
+- Parse quoted command-line arguments and keep per-project argument history.
+- Persist the last executed project and executable across Neovim sessions.
+- Show ANSI-colored process output in a floating window.
+- Parse common GCC/Clang and MSVC diagnostics into the quickfix list.
+- C/C++ helpers for switching source/header files, inserting includes, and viewing project metadata.
+- Optional Telescope Projects integration with project actions and recent-project restoration.
+
+## Installation
+
+With lazy.nvim:
+
+```lua
+{
+  "soulz3r/yap.nvim",
+  dependencies = {
+    "nvim-telescope/telescope.nvim",
+    "nvim-telescope/telescope-project.nvim",
+  },
+  config = function()
+    require("yap").setup({
+      projects_dir = vim.fn.expand("~/projects"),
+      telescope = true,
+    })
+  end,
+}
+```
+
+Set `projects_dir` to your project directory. If omitted, YAP uses `PROJECTS_DIR`, `D:/config/projects` on Windows, or `~/projects` elsewhere. Set `telescope = false` to use the core without Telescope.
+
+## Keymaps
+
+| Keymap | Action |
+|---|---|
+| `<leader>pp` | Open project picker |
+| `<leader>pr` | Build and run project |
+| `<leader>pb` | Build project |
+| `<leader>pc` | Clean project |
+| `<leader>pB` | Clean and rebuild |
+| `<leader>pS` | Choose build script |
+| `<leader>pe` | Choose executable from `bin/` |
+| `<leader>ps` | Stop active process |
+| `<leader>pR` | Rerun last executable |
+| `<leader>ch` | Switch C/C++ source/header |
+| `<leader>ci` | Insert include |
+| `<leader>cp` | Show C project metadata |
+
+Inside Telescope Projects: `<C-g>/gR` builds and runs, `<C-y>/gB` builds, `<C-e>/gE` selects an executable, `<C-a>/gA` opens project actions, `gC` cleans, `gX` cleans and rebuilds, and `gS` chooses a build script.
+
+## Build conventions
+
+YAP runs scripts from the project root. Windows priority is `build_all.bat`, then `build.bat`; Unix priority is `build_all.sh`, then `build.sh`. Clean scripts use equivalent `clean_all` / `clean` names.
+
+The default executable is `bin/<project-name>` (`.exe` on Windows). If absent, YAP uses the only executable in `bin/`, or lets you select one when multiple are present.
+
+## API and state
+
+- `:CProjectInfo` shows project metadata.
+- `:CSwitchHeader` switches source/header files.
+- `require("yap").projects` exposes the project engine.
+- `require("yap").project_registry` exposes persistent metadata.
+- `require("yap").setup({ telescope = false })` initializes the core without Telescope.
+
+YAP uses only `Yap*` highlight groups and stores state under `stdpath("state")/yap` and `stdpath("data")/yap`. Existing Soul project state and argument history are read as migration fallbacks.
