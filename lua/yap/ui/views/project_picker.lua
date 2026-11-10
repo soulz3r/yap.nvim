@@ -162,8 +162,6 @@ function M.open(opts)
 		has_results = #entries > 0,
 		empty_message = #entries > 0 and "No matching C projects" or "No C projects found",
 		hints = hints_for("normal"),
-		mode = "normal",
-		input_focused = false,
 	})
 
 	local renderer = layout.create_renderer(opts)
@@ -299,10 +297,16 @@ function M.open(opts)
 			mode = { "n" },
 			key = "i",
 			handler = function()
-				signal.mode = "insert"
+				local input = renderer:get_component_by_id("project-search")
+				if not input then
+					return
+				end
+				input:focus()
 				signal.hints = hints_for("insert")
 				vim.schedule(function()
-					vim.cmd("startinsert")
+					if vim.api.nvim_win_is_valid(input.winid) then
+						vim.cmd("startinsert")
+					end
 				end)
 			end,
 		},
@@ -310,7 +314,6 @@ function M.open(opts)
 			mode = { "i" },
 			key = "<Esc>",
 			handler = function()
-				signal.mode = "normal"
 				signal.hints = hints_for("normal")
 				vim.schedule(function()
 					local input = renderer:get_component_by_id("project-search")
