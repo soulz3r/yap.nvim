@@ -1,6 +1,6 @@
 # yap.nvim
 
-A small Neovim toolkit for C/C++ project workflows. YAP handles project detection, build scripts, execution, output, compiler diagnostics, and a Telescope Projects integration without depending on another user's config namespace.
+A small Neovim toolkit for C/C++ project workflows. YAP handles project detection, build scripts, execution, output, compiler diagnostics, and an optional Telescope Projects integration without depending on another user's config namespace.
 
 ## Features
 
@@ -46,7 +46,7 @@ With lazy.nvim:
 }
 ```
 
-Set `projects_dir` to your project directory. If omitted, YAP uses `PROJECTS_DIR`, `D:/config/projects` on Windows, or `~/projects` elsewhere. Set `telescope = false` to use the core without Telescope.
+Set `projects_dir` to your project directory. If omitted, YAP uses `PROJECTS_DIR`, `D:/config/projects` on Windows, or `~/projects` elsewhere. Telescope integration is disabled by default; set `telescope = true` to enable it. When enabling it, install both Telescope and `telescope-project.nvim` as shown above.
 
 ## Colors
 
