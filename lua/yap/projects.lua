@@ -165,7 +165,6 @@ local function open_output(root, title)
 	local buf = vim.api.nvim_create_buf(false, true)
 	local width = math.max(1, math.min(vim.o.columns - 4, math.floor(vim.o.columns * 0.82)))
 	local height = math.max(1, math.min(vim.o.lines - 4, math.floor(vim.o.lines * 0.72)))
-	local separator = string.rep("─", math.max(1, width))
 	local win = vim.api.nvim_open_win(buf, true, {
 		relative = "editor",
 		width = width,
@@ -177,6 +176,17 @@ local function open_output(root, title)
 		title = " " .. title .. " ",
 		title_pos = "center",
 	})
+
+	vim.wo[win].number = false
+	vim.wo[win].relativenumber = false
+	vim.wo[win].signcolumn = "no"
+	vim.wo[win].foldcolumn = "0"
+	vim.wo[win].statuscolumn = ""
+
+	local content_width = vim.api.nvim_win_get_width(win)
+	local separator = content_width > 1
+		and ("├" .. string.rep("─", content_width - 2) .. "┤")
+		or string.rep("─", content_width)
 
 	vim.bo[buf].buftype = "nofile"
 	vim.bo[buf].bufhidden = "wipe"
@@ -700,7 +710,7 @@ local function launch(file, root, append, args)
 	local command = { file }
 	vim.list_extend(command, args or {})
 
-	local started = run_command(command, root, append, function(code)
+	local started = run_command(command, root, append, function(code, elapsed)
 		append({
 			"",
 			code == 0
