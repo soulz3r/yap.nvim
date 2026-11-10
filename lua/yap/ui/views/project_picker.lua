@@ -427,8 +427,7 @@ function M.open(opts)
 				truncate = false,
 				lines = signal.description_lines,
 				hidden = signal.has_readme:negate(),
-			})),
-
+			}))
 		)
 	end
 
