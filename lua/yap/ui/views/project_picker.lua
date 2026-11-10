@@ -153,7 +153,7 @@ local function to_lines(text)
 
 	for _, value in ipairs(vim.split(text or "", "\n", { plain = true, trimempty = false })) do
 		local line = Line()
-		line:append(value)
+		line:append(value:gsub("[\\r\\n]", " "))
 		lines[#lines + 1] = line
 	end
 
@@ -321,9 +321,11 @@ function M.open(opts)
 			mode = { "i" },
 			key = "<Esc>",
 			handler = function()
-				vim.cmd("stopinsert")
 				signal.mode = "normal"
 				signal.hints = to_lines(hints_for("normal"))
+				vim.schedule(function()
+					vim.cmd("stopinsert")
+				end)
 			end,
 		},
 		{
