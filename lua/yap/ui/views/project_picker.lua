@@ -351,7 +351,7 @@ function M.open(opts)
 			handler = function()
 				vim.cmd("stopinsert")
 				signal.mode = "normal"
-				signal.hints = hints_for("normal")
+				signal.hints = to_lines(hints_for("normal"))
 			end,
 		},
 		{
@@ -395,7 +395,7 @@ function M.open(opts)
 				vim.cmd("stopinsert")
 			end
 			signal.mode = "normal"
-			signal.hints = hints_for("normal")
+			signal.hints = to_lines(hints_for("normal"))
 		end)
 	end)
 
