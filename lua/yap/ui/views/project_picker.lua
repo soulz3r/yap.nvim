@@ -316,7 +316,6 @@ function M.open(opts)
 	local body = function()
 		return n.rows({
 			flex = 1,
-			border_style = "rounded",
 			padding = {
 				top = 1,
 				right = 2,
@@ -325,6 +324,8 @@ function M.open(opts)
 			},
 		},
 			Input(n, {
+				border_style = "rounded",
+				border_label = "Search",
 				on_change = function(value)
 					set_filter(value)
 				end,
