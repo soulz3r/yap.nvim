@@ -4,7 +4,6 @@ local registry = require("yap.project_registry")
 local layout = require("yap.ui.layout")
 
 local Input = require("yap.ui.components.input")
-local Panel = require("yap.ui.components.panel")
 local SelectableList = require("yap.ui.components.selectable_list")
 local Description = require("yap.ui.components.description")
 local KeymapHints = require("yap.ui.components.keymap_hints")
@@ -256,7 +255,16 @@ function M.open(opts)
 	end
 
 	local body = function()
-		return n.rows({ flex = 1 },
+		return n.rows({
+			flex = 1,
+			border_style = "rounded",
+			padding = {
+				top = 1,
+				right = 2,
+				bottom = 1,
+				left = 2,
+			},
+		},
 			Input(n, {
 				on_change = function(value)
 					set_filter(value)
@@ -283,44 +291,34 @@ function M.open(opts)
 					signal.hints = hints_for("normal")
 				end,
 			}),
-			Panel({
-				flex = 1,
-				border_label = { text = "Projects", align = "left" },
+			SelectableList(n, {
+				data = signal.filtered,
+				hidden = signal.has_results:negate(),
 				on_focus = focus_input,
-			},
-				SelectableList(n, {
-					data = signal.filtered,
-					hidden = signal.has_results:negate(),
-					on_focus = focus_input,
-					on_change = function(node)
-						if node then
-							update_description(find_project(entries, node.path))
-						end
-					end,
-					on_select = function(node)
-						if node then
-							choose(node.path)
-						end
-					end,
-				}),
-				n.paragraph(style.with_defaults({
-					flex = 1,
-					is_focusable = false,
-					align = "center",
-					lines = signal.empty_message,
-					hidden = signal.has_results,
-					on_focus = focus_input,
-				}))
-			),
-			Panel({
-				flex = 0,
-				border_label = { text = "Description", align = "left" },
+				on_change = function(node)
+					if node then
+						update_description(find_project(entries, node.path))
+					end
+				end,
+				on_select = function(node)
+					if node then
+						choose(node.path)
+					end
+				end,
+			}),
+			n.paragraph(style.with_defaults({
+				id = "project-empty-message",
+				size = 1,
+				is_focusable = false,
+				align = "left",
+				lines = signal.empty_message,
+				hidden = signal.has_results,
+			})),
+			Description(n, {
+				lines = signal.readme_lines,
 				hidden = signal.has_readme:negate(),
-				on_focus = focus_input,
-			},
-				Description(n, { lines = signal.readme_lines, on_focus = focus_input })
-			),
-			KeymapHints(n, { lines = signal.hints, on_focus = focus_input })
+			}),
+			KeymapHints(n, { lines = signal.hints })
 		)
 	end
 
