@@ -333,13 +333,7 @@ function M.open(opts)
 				end,
 			}),
 			n.columns({ flex = 1, gap = 2 },
-				n.rows({ flex = 1, gap = 1 },
-					n.paragraph(style.with_defaults({
-						id = "project-list-heading",
-						size = 1,
-						is_focusable = false,
-						lines = "Projects",
-					})),
+				n.rows({ flex = 1, gap = 1, border_style = "rounded", border_label = "Projects" },
 					SelectableList(n, {
 						data = signal.filtered,
 						hidden = signal.has_results:negate(),
@@ -363,13 +357,7 @@ function M.open(opts)
 						hidden = signal.has_results,
 					}))
 				),
-				n.rows({ flex = 1.35, gap = 1, padding = { left = 1 } },
-					n.paragraph(style.with_defaults({
-						id = "project-preview-heading",
-						size = 1,
-						is_focusable = false,
-						lines = "Preview",
-					})),
+				n.rows({ flex = 1.35, gap = 1, padding = { left = 1 }, border_style = "rounded", border_label = "Preview" },
 					n.paragraph(style.with_defaults({
 						id = "project-preview",
 						flex = 1,
@@ -380,13 +368,7 @@ function M.open(opts)
 					}))
 				)
 			),
-			n.rows({ flex = 0, gap = 1, hidden = signal.has_readme:negate() },
-				n.paragraph(style.with_defaults({
-					id = "project-description-heading",
-					size = 1,
-					is_focusable = false,
-					lines = "Description",
-				})),
+			n.rows({ flex = 0, gap = 1, hidden = signal.has_readme:negate(), border_style = "rounded", border_label = "Description" },
 				n.paragraph(style.with_defaults({
 					id = "project-description",
 					is_focusable = false,
