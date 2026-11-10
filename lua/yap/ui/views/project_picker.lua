@@ -110,13 +110,13 @@ local function readme_for(root)
 	for _, name in ipairs({ "README.md", "readme.md" }) do
 		local path = root .. "/" .. name
 		if vim.fn.filereadable(path) == 1 then
-			local lines = vim.fn.readfile(path, "", 23)
+			local lines = vim.fn.readfile(path, "", 8)
 			if #lines == 0 then
 				lines = { "(README is empty)" }
-			elseif #lines == 23 then
-				lines[23] = "…"
+			elseif #lines == 8 then
+				lines[8] = "…"
 			end
-			return lines
+			return table.concat(lines, "\n")
 		end
 	end
 end
@@ -158,7 +158,7 @@ function M.open(opts)
 	local signal = n.create_signal({
 		filtered = make_nodes(n, entries),
 		selected_path = first and first.root or "",
-		readme_lines = initial_readme or {},
+		readme_lines = initial_readme or "",
 		has_readme = initial_readme ~= nil,
 		has_results = #entries > 0,
 		empty_message = #entries > 0 and "No matching C projects" or "No C projects found",
@@ -183,7 +183,7 @@ function M.open(opts)
 
 		local lines = project and readme_for(project.root) or nil
 		signal.has_readme = lines ~= nil
-		signal.readme_lines = lines or {}
+		signal.readme_lines = lines or ""
 	end
 
 	local function choose(path)
@@ -256,7 +256,7 @@ function M.open(opts)
 	end
 
 	local body = function()
-		return n.rows(
+		return n.rows({ flex = 1 },
 			Input(n, {
 				on_change = function(value)
 					set_filter(value)
@@ -283,44 +283,42 @@ function M.open(opts)
 					signal.hints = hints_for("normal")
 				end,
 			}),
-			n.columns({ flex = 1 },
-				Panel({
-					flex = 1,
-					border_label = { text = "Projects", align = "left" },
+			Panel({
+				flex = 1,
+				border_label = { text = "Projects", align = "left" },
+				on_focus = focus_input,
+			},
+				SelectableList(n, {
+					data = signal.filtered,
+					hidden = signal.has_results:negate(),
 					on_focus = focus_input,
-				},
-					SelectableList(n, {
-						data = signal.filtered,
-						hidden = signal.has_results:negate(),
-						on_focus = focus_input,
-						on_change = function(node)
-							if node then
-								update_description(find_project(entries, node.path))
-							end
-						end,
-						on_select = function(node)
-							if node then
-								choose(node.path)
-							end
-						end,
-					}),
-					n.paragraph(style.with_defaults({
-						flex = 1,
-						is_focusable = false,
-						align = "center",
-						lines = signal.empty_message,
-						hidden = signal.has_results,
-						on_focus = focus_input,
-					}))
-				),
-				Panel({
+					on_change = function(node)
+						if node then
+							update_description(find_project(entries, node.path))
+						end
+					end,
+					on_select = function(node)
+						if node then
+							choose(node.path)
+						end
+					end,
+				}),
+				n.paragraph(style.with_defaults({
 					flex = 1,
-					border_label = { text = "Description", align = "left" },
-					hidden = signal.has_readme:negate(),
+					is_focusable = false,
+					align = "center",
+					lines = signal.empty_message,
+					hidden = signal.has_results,
 					on_focus = focus_input,
-				},
-					Description(n, { lines = signal.readme_lines, on_focus = focus_input })
-				)
+				}))
+			),
+			Panel({
+				flex = 0,
+				border_label = { text = "Description", align = "left" },
+				hidden = signal.has_readme:negate(),
+				on_focus = focus_input,
+			},
+				Description(n, { lines = signal.readme_lines, on_focus = focus_input })
 			),
 			KeymapHints(n, { lines = signal.hints, on_focus = focus_input })
 		)
