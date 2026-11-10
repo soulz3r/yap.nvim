@@ -8,7 +8,6 @@ local SelectableList = require("yap.ui.components.selectable_list")
 local Description = require("yap.ui.components.description")
 local KeymapHints = require("yap.ui.components.keymap_hints")
 local style = require("yap.ui.components.style")
-local Line = require("nui.line")
 
 local markers = {
 	".git",
@@ -148,18 +147,6 @@ local function hints_for(mode)
 	return "i  search     j/k or Ctrl-N/P  navigate     Enter  open     q  close"
 end
 
-local function to_lines(text)
-	local lines = {}
-
-	for _, value in ipairs(vim.split(text or "", "\n", { plain = true, trimempty = false })) do
-		local line = Line()
-		line:append(value:gsub("[\\r\\n]", " "))
-		lines[#lines + 1] = line
-	end
-
-	return lines
-end
-
 function M.open(opts)
 	opts = opts or {}
 	local n = require("nui-components")
@@ -170,11 +157,11 @@ function M.open(opts)
 	local signal = n.create_signal({
 		filtered = make_nodes(n, entries),
 		selected_path = first and first.root or "",
-		readme_lines = to_lines(initial_readme or ""),
+		readme_lines = initial_readme or "",
 		has_readme = initial_readme ~= nil,
 		has_results = #entries > 0,
 		empty_message = #entries > 0 and "No matching C projects" or "No C projects found",
-		hints = to_lines(hints_for("normal")),
+		hints = hints_for("normal"),
 		mode = "normal",
 		input_focused = false,
 	})
@@ -186,7 +173,7 @@ function M.open(opts)
 
 		local lines = project and readme_for(project.root) or nil
 		signal.has_readme = lines ~= nil
-		signal.readme_lines = to_lines(lines or "")
+		signal.readme_lines = lines or ""
 	end
 
 	local function choose(path)
@@ -313,8 +300,10 @@ function M.open(opts)
 			key = "i",
 			handler = function()
 				signal.mode = "insert"
-				signal.hints = to_lines(hints_for("insert"))
-				vim.cmd("startinsert")
+				signal.hints = hints_for("insert")
+				vim.schedule(function()
+					vim.cmd("startinsert")
+				end)
 			end,
 		},
 		{
@@ -322,9 +311,12 @@ function M.open(opts)
 			key = "<Esc>",
 			handler = function()
 				signal.mode = "normal"
-				signal.hints = to_lines(hints_for("normal"))
+				signal.hints = hints_for("normal")
 				vim.schedule(function()
-					vim.cmd("stopinsert")
+					local input = renderer:get_component_by_id("project-search")
+					if input and vim.api.nvim_get_current_win() == input.winid then
+						vim.cmd("stopinsert")
+					end
 				end)
 			end,
 		},
@@ -362,16 +354,6 @@ function M.open(opts)
 			handler = close,
 		},
 	})
-
-	renderer:on_mount(function()
-		vim.schedule(function()
-			if renderer:get_component_by_id("project-search") then
-				vim.cmd("stopinsert")
-			end
-			signal.mode = "normal"
-			signal.hints = to_lines(hints_for("normal"))
-		end)
-	end)
 
 	renderer:render(body)
 	return renderer
