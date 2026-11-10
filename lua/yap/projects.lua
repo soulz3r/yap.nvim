@@ -232,14 +232,16 @@ local function open_output(root, title, initial_section)
 		then
 			group = "YapMetadata"
 		elseif trimmed:match("^BUILD$") or trimmed:match("^CLEAN$")
-			or trimmed:match("^EXECUTION$") or trimmed:match("^EXECUTING$") or trimmed:match("^PROJECT$")
+			or trimmed:match("^EXECUTION$") or trimmed:match("^PROJECT$")
+			or trimmed:match("^BUILD RESULT$") or trimmed:match("^CLEAN RESULT$")
+			or trimmed:match("^EXECUTION RESULT$") or trimmed:match("^Action:")
 		then
 			group = "YapPhase"
-		elseif trimmed:match("succeeded") or trimmed:match("successfully")
-			or trimmed:match("^Build completed")
+		elseif trimmed:match("^Status: SUCCESS$") or trimmed:match("succeeded")
+			or trimmed:match("successfully") or trimmed:match("^Build completed")
 		then
 			group = "YapSuccess"
-		elseif trimmed:match("failed") or trimmed:match("Could not")
+		elseif trimmed:match("^Status: FAILED$") or trimmed:match("failed") or trimmed:match("Could not")
 			or trimmed:match("No supported") or trimmed:match("No .* found")
 		then
 			group = "YapError"
