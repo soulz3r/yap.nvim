@@ -214,6 +214,22 @@ local function hints_for(mode)
 	return "i  search     j/k or Ctrl-N/P  navigate     Enter  open     q  close"
 end
 
+local function description_lines(n, readme, hints, width)
+	local lines = {}
+
+	if readme and readme ~= "" then
+		for _, line in ipairs(vim.split(readme, "\n", { plain = true })) do
+			lines[#lines + 1] = n.line(line)
+		end
+	end
+
+	local hint_width = vim.api.nvim_strwidth(hints)
+	local left_padding = math.max(0, width - hint_width)
+	lines[#lines + 1] = n.line(string.rep(" ", left_padding), hints)
+
+	return lines
+end
+
 function M.open(opts)
 	opts = opts or {}
 	local n = require("nui-components")
@@ -225,30 +241,27 @@ function M.open(opts)
 	local readme_content = initial_readme
 	local current_hints = hints_for("normal")
 
+	local renderer = layout.create_renderer(opts)
+	local description_width = math.max(1, renderer:get_size().width - 4)
+
 	local signal = n.create_signal({
 		filtered = make_nodes(n, entries),
 		selected_path = first and first.root or "",
 		preview_lines = preview_content,
-		readme_lines = initial_readme or "",
-		hints = current_hints,
-		has_readme = initial_readme ~= nil,
+		readme_lines = description_lines(n, initial_readme, current_hints, description_width),
 		has_results = #entries > 0,
 		empty_message = #entries > 0 and "No matching C projects" or "No C projects found",
 	})
 
-	local renderer = layout.create_renderer(opts)
-
 	local function refresh_content()
-		signal.readme_lines = readme_content or ""
+		signal.readme_lines = description_lines(n, readme_content, current_hints, description_width)
 		signal.preview_lines = preview_content
-		signal.hints = current_hints
 	end
 
 	local function update_preview(project)
 		signal.selected_path = project and project.root or ""
 		preview_content = preview_for(project)
 		readme_content = project and readme_for(project.root) or nil
-		signal.has_readme = readme_content ~= nil
 		refresh_content()
 	end
 
@@ -388,19 +401,9 @@ function M.open(opts)
 				id = "project-description",
 				is_focusable = false,
 				align = "left",
-				max_lines = 8,
+				max_lines = 9,
 				truncate = true,
 				lines = signal.readme_lines,
-				hidden = signal.has_readme:negate(),
-			})),
-			n.paragraph(style.with_defaults({
-				id = "project-keymap-hints",
-				size = 1,
-				max_lines = 1,
-				border_style = "none",
-				is_focusable = false,
-				align = "right",
-				lines = signal.hints,
 			}))
 		)
 	end
