@@ -155,6 +155,7 @@ function M.open_buffer(buf, opts)
 		vim.wo[win].foldcolumn = "0"
 		vim.wo[win].statuscolumn = ""
 		vim.wo[win].wrap = opts.wrap ~= false
+		vim.wo[win].linebreak = opts.wrap ~= false
 		vim.wo[win].cursorline = opts.cursorline ~= false
 
 		if opts.on_mount then
@@ -169,7 +170,6 @@ function M.open_buffer(buf, opts)
 			flex = 1,
 			autoscroll = opts.autoscroll == true,
 			autofocus = opts.autofocus ~= false,
-			linebreak = opts.wrap ~= false,
 			border_label = opts.title and {
 				text = opts.title,
 				align = "center",
