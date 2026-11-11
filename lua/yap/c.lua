@@ -115,7 +115,11 @@ local function compile_metadata()
 	require("yap.ui").open_text(
 		lines,
 		" C Project ",
-		{ width = math.floor(vim.o.columns * 0.68), height = math.min(#lines + 1, 24) }
+		{
+			width = math.floor(vim.o.columns * 0.68),
+			height = math.min(#lines + 1, 24),
+			close_on_blur = true,
+		}
 	)
 end
 
@@ -126,12 +130,16 @@ function M.setup()
 	local group = vim.api.nvim_create_augroup("YapCTools", { clear = true })
 	vim.api.nvim_create_autocmd("FileType", {
 		group = group,
-		pattern = { "c", "cpp" },
+		pattern = "*",
 		callback = function(args)
-			vim.keymap.set("n", "<leader>pi", compile_metadata, {
-				buffer = args.buf,
-				desc = "C: Project information",
-			})
+			if vim.bo[args.buf].filetype == "c" or vim.bo[args.buf].filetype == "cpp" then
+				vim.keymap.set("n", "<leader>pi", compile_metadata, {
+					buffer = args.buf,
+					desc = "C: Project information",
+				})
+			else
+				pcall(vim.keymap.del, "n", "<leader>pi", { buffer = args.buf })
+			end
 		end,
 	})
 
