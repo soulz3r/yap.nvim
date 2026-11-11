@@ -34,7 +34,7 @@ function M.open(opts)
 		filtered = Discovery.nodes(n, entries),
 		selected_path = first and first.root or "",
 		preview_lines = preview_content,
-		description_lines = initial_readme and vim.split(initial_readme, "\n", { plain = true }) or {},
+		description_lines = initial_readme or "",
 		has_readme = initial_readme ~= nil,
 		has_results = #entries > 0,
 		empty_message = #entries > 0 and "No matching C projects" or "No C projects found",
@@ -44,7 +44,7 @@ function M.open(opts)
 
 	local function refresh_content()
 		signal.preview_lines = preview_content
-		signal.description_lines = readme_content and vim.split(readme_content, "\n", { plain = true }) or {}
+		signal.description_lines = readme_content or ""
 		signal.has_readme = readme_content ~= nil
 		signal.hint_lines = KeymapHints.build(Keymaps.hints(keymap_actions, current_mode))
 	end
