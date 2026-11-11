@@ -165,6 +165,7 @@ function M.open_buffer(buf, opts)
 			buf = buf,
 			flex = 1,
 			autoscroll = opts.autoscroll == true,
+			autofocus = opts.autofocus ~= false,
 			linebreak = opts.wrap ~= false,
 			border_label = opts.title and {
 				text = opts.title,
@@ -199,17 +200,6 @@ function M.open_text(lines, title, opts)
 		title = title,
 		wrap = opts.wrap == true,
 		cursorline = true,
-		on_mount = function(_, win)
-			-- NuiComponents may restore the previous window after its mount
-			-- callback. Defer focus twice so that restoration finishes first.
-			vim.schedule(function()
-				vim.schedule(function()
-					if vim.api.nvim_win_is_valid(win) then
-						vim.api.nvim_set_current_win(win)
-					end
-				end)
-			end)
-		end,
 	})
 
 	local function close()
