@@ -200,6 +200,19 @@ function M.open_text(lines, title, opts)
 		title = title,
 		wrap = opts.wrap == true,
 		cursorline = true,
+		on_mount = opts.close_on_blur and function(_, win)
+			vim.api.nvim_create_autocmd("WinLeave", {
+				buffer = buf,
+				once = true,
+				callback = function()
+					vim.schedule(function()
+						if vim.api.nvim_win_is_valid(win) then
+							renderer:close()
+						end
+					end)
+				end,
+			})
+		end or nil,
 	})
 
 	local function close()
