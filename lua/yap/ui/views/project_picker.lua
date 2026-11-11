@@ -231,7 +231,6 @@ function M.open(opts)
 		selected_path = first and first.root or "",
 		preview_lines = preview_content,
 		description_lines = initial_readme and vim.split(initial_readme, "\n", { plain = true }) or {},
-		is_insert = false,
 		has_readme = initial_readme ~= nil,
 		has_results = #entries > 0,
 		empty_message = #entries > 0 and "No matching C projects" or "No C projects found",
@@ -255,7 +254,6 @@ function M.open(opts)
 		signal.preview_lines = preview_content
 		signal.description_lines = readme_content and vim.split(readme_content, "\\n", { plain = true }) or {}
 		signal.has_readme = readme_content ~= nil
-		signal.is_insert = current_mode == "insert"
 		signal.hint_lines = KeymapHints.build(visible_hints())
 	end
 
@@ -399,7 +397,7 @@ function M.open(opts)
 				lines = signal.description_lines,
 				hidden = signal.has_readme:negate(),
 			}),
-				KeymapHints.new(n, {
+			KeymapHints.new(n, {
 				lines = signal.hint_lines,
 			})
 		)
