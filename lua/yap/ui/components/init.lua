@@ -1,4 +1,5 @@
 return {
+	ActionBar = require("yap.ui.components.action_bar"),
 	Description = require("yap.ui.components.description"),
 	Input = require("yap.ui.components.input"),
 	Panel = require("yap.ui.components.panel"),
