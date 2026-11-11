@@ -28,6 +28,7 @@ local default_highlights = {
 	path = { link = "Directory" },
 	phase = { link = "Title" },
 	metadata = { link = "Comment" },
+	keymap_key = { link = "Special" },
 	diagnostic = { link = "DiagnosticInfo" },
 }
 
@@ -44,6 +45,7 @@ local highlight_groups = {
 	path = "YapPath",
 	phase = "YapPhase",
 	metadata = "YapMetadata",
+	keymap_key = "YapKeymapKey",
 	diagnostic = "YapDiagnostic",
 }
 
