@@ -1,8 +1,10 @@
 # yap.nvim
 
-A small Neovim toolkit for C/C++ project workflows. YAP handles project detection, build scripts, execution, output, compiler diagnostics, and an optional Telescope Projects integration without depending on another user's config namespace.
+A small Neovim toolkit for C/C++ project workflows. YAP handles project detection, build scripts, execution, output, compiler diagnostics, C/C++ helpers, persistent project metadata, and an optional Telescope Projects integration.
 
-## Features
+> **Beta direction:** the existing project tools are being preserved. The new UI system is currently a design and pseudocode prototype. It will use Neovim APIs directly and will not depend on NuiComponents.
+
+## Existing functionality
 
 - Detect project roots from Git, Make, CMake, and common build metadata.
 - Build using `build_all.bat`, `build.bat`, `build_all.sh`, or `build.sh`, with platform-aware priority.
@@ -28,52 +30,65 @@ With lazy.nvim:
     "nvim-telescope/telescope-project.nvim",
   },
   config = function()
-    require("yap").setup({
-      projects_dir = vim.fn.expand("~/projects"),
-      telescope = true,
-      highlights = {
-        normal = { fg = "#D3C6AA", bg = "NONE" },
-        border = { fg = "#859289", bg = "NONE" },
-        title = { fg = "#A7C080", bg = "NONE", bold = true },
-        section_title = { fg = "#A7C080", bold = true },
-        muted = { fg = "#859289" },
-        success = { fg = "#A7C080" },
-        warning = { fg = "#DBBC7F" },
-        error = { fg = "#E67E80" },
-      },
+    local yap = require("yap")
+
+    -- Setup is intentionally explicit in beta. No defaults or keymaps
+    -- are silently installed by require("yap").setup().
+    yap.setup({
+      -- c_tools = true,
+      -- ui = { highlights = { ... } },
+      -- telescope = { projects_dir = vim.fn.expand("~/projects") },
     })
   end,
 }
 ```
 
-Set `projects_dir` to your project directory. If omitted, YAP uses `PROJECTS_DIR`, `D:/config/projects` on Windows, or `~/projects` elsewhere. Telescope integration is disabled by default; set `telescope = true` to enable it. When enabling it, install both Telescope and `telescope-project.nvim` as shown above.
+The setup entry point is intentionally a user-owned placeholder in this beta. Existing modules remain available directly:
 
-## Colors
+- `require("yap").projects`: project detection, build/run/clean, output, and diagnostics.
+- `require("yap").project_registry`: persistent project metadata.
+- `require("yap").c`: C/C++ helper module.
+- `require("yap.ui")`: existing floating-window helpers used by process output and C metadata.
 
-YAP exposes a `highlights` option in `setup()`. Each entry accepts the same highlight options as `vim.api.nvim_set_hl()`, including `fg`, `bg`, `bold`, `italic`, and `link`. Colors are reapplied after every `ColorScheme` event.
+## UI architecture
 
-Available keys are `normal`, `border`, `title`, `section_title`, `muted`, `success`, `warning`, `error`, `command`, `path`, `phase`, `metadata`, and `diagnostic`. Omit any key to keep its default link to the corresponding Neovim highlight group. Use `bg = "NONE"` for transparent float content and borders.
+The new UI system is planned as a declarative manager with independent components:
 
-The float uses the plugin-owned `YapFloatNormal`, `YapFloatBorder`, and `YapFloatTitle` groups, so its appearance can be customized without changing global Neovim highlights.
+```text
+Feature / keymap
+      |
+      v
+  UI manager
+      |
+      v
+    Layout
+      |
+      v
+     Panel
+      |
+      v
+   Component
+      |
+      v
+   UI backend
+```
 
-## Keymaps
+A feature will call the manager with a specification containing overall size, layout, shared items, panels, and callbacks. Each panel declares a component type, name, position, size, and component options. Counts such as the number of panels or items are derived from the supplied tables rather than passed separately.
 
-| Keymap | Action |
-|---|---|
-| `<leader>pp` | Open project picker |
-| `<leader>pr` | Build and run project |
-| `<leader>pb` | Build project |
-| `<leader>pc` | Clean project |
-| `<leader>pB` | Clean and rebuild |
-| `<leader>pS` | Choose build script |
-| `<leader>pe` | Choose executable from `bin/` |
-| `<leader>ps` | Stop active process |
-| `<leader>pR` | Rerun last executable |
-| `<leader>ch` | Switch C/C++ source/header |
-| `<leader>ci` | Insert include |
-| `<leader>cp` | Show C project metadata |
+Components such as `yTree`, `yList`, `yInput`, and `yPreview` own their internal state and lifecycle: `new`, `mount`, `update`, `focus`, `handle_key`, `close`, and `destroy`. The session coordinates them without taking over their internal behavior.
 
-Inside Telescope Projects: `<C-g>/gR` builds and runs, `<C-y>/gB` builds, `<C-e>/gE` selects an executable, `<C-a>/gA` opens project actions, `gC` cleans, `gX` cleans and rebuilds, and `gS` chooses a build script.
+Error handling will be centralized through a protected callback wrapper using `xpcall`. Components and sessions can supply `on_error` callbacks; cleanup must still run when a callback fails.
+
+**Read the full design:** [docs/ui-system.md](docs/ui-system.md)
+
+**Lua pseudocode:** [lua/yap/ui/prototype.lua](lua/yap/ui/prototype.lua)
+
+## Current setup behavior
+
+- `require("yap")` exports the existing modules.
+- `setup(opts)` does not merge defaults or initialize features automatically in beta.
+- The existing `lua/yap/ui.lua` is retained for current process output and C metadata windows. It is not the proposed component manager.
+- No NuiComponents dependency or imports are part of the beta branch.
 
 ## Build conventions
 
@@ -81,12 +96,4 @@ YAP runs scripts from the project root. Windows priority is `build_all.bat`, the
 
 The default executable is `bin/<project-name>` (`.exe` on Windows). If absent, YAP uses the only executable in `bin/`, or lets you select one when multiple are present.
 
-## API and state
-
-- `:CProjectInfo` shows project metadata.
-- `:CSwitchHeader` switches source/header files.
-- `require("yap").projects` exposes the project engine.
-- `require("yap").project_registry` exposes persistent metadata.
-- `require("yap").setup({ telescope = false })` initializes the core without Telescope.
-
-YAP uses only `Yap*` highlight groups and stores state under `stdpath("state")/yap` and `stdpath("data")/yap`. Existing Soul project state and argument history are read as migration fallbacks.
+YAP stores state under `stdpath("state")/yap` and `stdpath("data")/yap`. Existing Soul project state and argument history are read as migration fallbacks.
