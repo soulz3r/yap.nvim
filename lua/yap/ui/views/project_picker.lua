@@ -10,6 +10,7 @@ local SelectableList = Components.SelectableList
 local Panel = Components.Panel
 local Paragraph = Components.Paragraph
 local Description = Components.Description
+local KeymapHints = require("yap.ui.components.keymap_hints")
 
 local markers = {
 	".git",
@@ -221,6 +222,7 @@ function M.open(opts)
 	local preview_content = preview_for(first)
 	local readme_content = initial_readme
 	local current_mode = "normal"
+	local keymap_actions = {}
 
 	local renderer = layout.create_renderer(opts)
 
@@ -233,6 +235,7 @@ function M.open(opts)
 		has_readme = initial_readme ~= nil,
 		has_results = #entries > 0,
 		empty_message = #entries > 0 and "No matching C projects" or "No C projects found",
+		hint_lines = KeymapHints.build({}),
 	})
 
 	local function refresh_content()
@@ -382,109 +385,17 @@ function M.open(opts)
 				lines = signal.description_lines,
 				hidden = signal.has_readme:negate(),
 			}),
-			n.columns({
-				id = "project-keymap-hints",
-				flex = 1,
-				size = 1,
-			},
-				n.button({
-					id = "hint-search",
-					label = "i  search",
-					flex = 10,
-					size = 1,
-					align = "center",
-					is_focusable = false,
-					window = {
-						highlight = {
-							NormalFloat = "Normal",
-							FloatBorder = "Normal",
-						},
-					},
-					hidden = signal.is_insert,
-				}),
-				n.button({
-					id = "hint-navigate",
-					label = "j/k  navigate",
-					flex = 13,
-					size = 1,
-					align = "center",
-					is_focusable = false,
-					window = {
-						highlight = {
-							NormalFloat = "Normal",
-							FloatBorder = "Normal",
-						},
-					},
-					hidden = signal.is_insert,
-				}),
-				n.button({
-					id = "hint-open",
-					label = "Enter  open",
-					flex = 12,
-					size = 1,
-					align = "center",
-					is_focusable = false,
-					window = {
-						highlight = {
-							NormalFloat = "Normal",
-							FloatBorder = "Normal",
-						},
-					},
-					hidden = signal.is_insert,
-				}),
-				n.button({
-					id = "hint-close",
-					label = "q  close",
-					flex = 9,
-					size = 1,
-					align = "center",
-					is_focusable = false,
-					window = {
-						highlight = {
-							NormalFloat = "Normal",
-							FloatBorder = "Normal",
-						},
-					},
-					hidden = signal.is_insert,
-				}),
-				n.button({
-					id = "hint-normal-mode",
-					label = "Esc  normal mode",
-					flex = 16,
-					size = 1,
-					align = "center",
-					is_focusable = false,
-					window = {
-						highlight = {
-							NormalFloat = "Normal",
-							FloatBorder = "Normal",
-						},
-					},
-					hidden = signal.is_insert:negate(),
-				}),
-				n.button({
-					id = "hint-insert-navigate",
-					label = "Ctrl-N/P  navigate",
-					flex = 19,
-					size = 1,
-					align = "center",
-					is_focusable = false,
-					window = {
-						highlight = {
-							NormalFloat = "Normal",
-							FloatBorder = "Normal",
-						},
-					},
-					hidden = signal.is_insert:negate(),
-				})
-			)
+				KeymapHints.new(n, {
+				lines = signal.hint_lines,
+			})
 		)
 	end
 
-	renderer:add_mappings({
+	keymap_actions = {
 		{
 			mode = { "n" },
 			key = "i",
+			hint = { key = "i", label = "search" },
 			handler = function()
 				local input = renderer:get_component_by_id("project-search")
 				if not input then
@@ -503,6 +414,7 @@ function M.open(opts)
 		{
 			mode = { "i" },
 			key = "<Esc>",
+			hint = { key = "Esc", label = "normal mode" },
 			handler = function()
 				current_mode = "normal"
 				refresh_content()
@@ -517,6 +429,7 @@ function M.open(opts)
 		{
 			mode = { "n", "i" },
 			key = "<C-n>",
+			hint = { key = "Ctrl-N/P", label = "navigate" },
 			handler = function()
 				move_selection("next")
 			end,
@@ -531,6 +444,7 @@ function M.open(opts)
 		{
 			mode = { "n" },
 			key = "j",
+			hint = { key = "j/k", label = "navigate" },
 			handler = function()
 				move_selection("next")
 			end,
@@ -544,10 +458,22 @@ function M.open(opts)
 		},
 		{
 			mode = { "n" },
+			key = "<CR>",
+			hint = { key = "Enter", label = "open" },
+			handler = function()
+				choose(selected_path())
+			end,
+		},
+		{
+			mode = { "n" },
 			key = "q",
+			hint = { key = "q", label = "close" },
 			handler = close,
 		},
-	})
+	}
+
+	refresh_content()
+	renderer:add_mappings(keymap_actions)
 
 	renderer:render(body)
 	return renderer
