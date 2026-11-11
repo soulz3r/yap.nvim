@@ -199,6 +199,11 @@ function M.open_text(lines, title, opts)
 		title = title,
 		wrap = opts.wrap == true,
 		cursorline = true,
+		on_mount = function(_, win)
+			if vim.api.nvim_win_is_valid(win) then
+				vim.api.nvim_set_current_win(win)
+			end
+		end,
 	})
 
 	local function close()
