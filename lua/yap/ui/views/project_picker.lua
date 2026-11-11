@@ -6,7 +6,7 @@ local layout = require("yap.ui.layout")
 local Discovery = require("yap.ui.views.project_picker.discovery")
 local Preview = require("yap.ui.views.project_picker.preview")
 local Keymaps = require("yap.ui.views.project_picker.keymaps")
-local KeymapHints = require("yap.ui.components.keymap_hints")
+local ActionBar = require("yap.ui.components.action_bar")
 
 local Components = require("yap.ui.components")
 
@@ -27,8 +27,19 @@ function M.open(opts)
 	local readme_content = initial_readme
 	local current_mode = "normal"
 	local keymap_actions = {}
+	local action_bar
 
-	local renderer = layout.create_renderer(opts)
+	local renderer = layout.create_renderer(vim.tbl_extend("force", {}, opts, {
+		on_unmount = function(parent)
+			if action_bar then
+				action_bar:close()
+			end
+
+			if opts.on_unmount then
+				opts.on_unmount(parent)
+			end
+		end,
+	}))
 
 	local signal = n.create_signal({
 		filtered = Discovery.nodes(n, entries),
@@ -38,15 +49,16 @@ function M.open(opts)
 		has_readme = initial_readme ~= nil,
 		has_results = #entries > 0,
 		empty_message = #entries > 0 and "No matching C projects" or "No C projects found",
-		hint_lines = KeymapHints.build({}),
 	})
-
 
 	local function refresh_content()
 		signal.preview_lines = preview_content
 		signal.description_lines = readme_content or ""
 		signal.has_readme = readme_content ~= nil
-		signal.hint_lines = KeymapHints.build(Keymaps.hints(keymap_actions, current_mode))
+
+		if action_bar then
+			action_bar:update(keymap_actions, current_mode)
+		end
 	end
 
 	local function update_preview(project)
@@ -119,7 +131,7 @@ function M.open(opts)
 		renderer:close()
 	end
 
-	local body = function()
+	local function body()
 		return n.rows({
 			flex = 1,
 			padding = {
@@ -182,9 +194,6 @@ function M.open(opts)
 				id = "project-description",
 				lines = signal.description_lines,
 				hidden = signal.has_readme:negate(),
-			}),
-			KeymapHints.new(n, {
-				lines = signal.hint_lines,
 			})
 		)
 	end
@@ -200,6 +209,15 @@ function M.open(opts)
 		choose = choose,
 		close = close,
 	})
+
+	action_bar = ActionBar.new({
+		parent = renderer,
+		position = "bottom",
+		style = "flat",
+		gap = 2,
+	})
+	action_bar:update(keymap_actions, current_mode)
+	action_bar:mount()
 
 	refresh_content()
 	renderer:add_mappings(keymap_actions)
