@@ -69,16 +69,18 @@ end
 
 function ActionBar:_content(n)
 	local children = {}
+	local button_index = 0
 
 	for _, action in ipairs(self.actions) do
 		local hint = get_hint(action)
 
 		if hint and is_visible(action, self.mode) and (action.on_press or action.handler) then
-			if #children > 0 then
+			if button_index > 0 then
 				children[#children + 1] = n.gap(self.opts.gap)
 			end
 
-			children[#children + 1] = n.button(self:_button_props(action, #children + 1))
+			button_index = button_index + 1
+			children[#children + 1] = n.button(self:_button_props(action, button_index))
 		end
 	end
 
