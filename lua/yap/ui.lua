@@ -204,15 +204,29 @@ function M.open_text(lines, title, opts)
 			local autocmd
 			autocmd = vim.api.nvim_create_autocmd("WinLeave", {
 				callback = function()
-					if vim.api.nvim_get_current_buf() ~= buf then
+					if not vim.api.nvim_win_is_valid(win) then
+						vim.api.nvim_del_autocmd(autocmd)
 						return
 					end
+
+					if vim.api.nvim_get_current_win() ~= win then
+						return
+					end
+
 					vim.api.nvim_del_autocmd(autocmd)
 					vim.schedule(function()
 						if vim.api.nvim_win_is_valid(win) then
 							renderer:close()
 						end
 					end)
+				end,
+			})
+
+			vim.api.nvim_create_autocmd("WinClosed", {
+				pattern = tostring(win),
+				once = true,
+				callback = function()
+					pcall(vim.api.nvim_del_autocmd, autocmd)
 				end,
 			})
 		end or nil,
