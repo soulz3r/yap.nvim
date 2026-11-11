@@ -10,7 +10,6 @@ local SelectableList = Components.SelectableList
 local Panel = Components.Panel
 local Paragraph = Components.Paragraph
 local Description = Components.Description
-local KeymapHints = Components.KeymapHints
 
 local markers = {
 	".git",
@@ -383,14 +382,73 @@ function M.open(opts)
 				lines = signal.description_lines,
 				hidden = signal.has_readme:negate(),
 			}),
-			KeymapHints(n, {
-				{ key = "i", label = "search", hidden = signal.is_insert },
-				{ key = "j/k", label = "navigate", hidden = signal.is_insert },
-				{ key = "Enter", label = "open", hidden = signal.is_insert },
-				{ key = "q", label = "close", hidden = signal.is_insert },
-				{ key = "Esc", label = "normal mode", hidden = signal.is_insert:negate() },
-				{ key = "Ctrl-N/P", label = "navigate", hidden = signal.is_insert:negate() },
-			})
+			n.columns({
+				id = "project-keymap-hints",
+				flex = 1,
+				size = 1,
+				gap = 1,
+			},
+				n.button({
+					id = "hint-search",
+					label = "i  search",
+					flex = 10,
+					size = 1,
+					align = "center",
+					is_focusable = false,
+					border_style = "none",
+					hidden = signal.is_insert,
+				}),
+				n.button({
+					id = "hint-navigate",
+					label = "j/k  navigate",
+					flex = 13,
+					size = 1,
+					align = "center",
+					is_focusable = false,
+					border_style = "none",
+					hidden = signal.is_insert,
+				}),
+				n.button({
+					id = "hint-open",
+					label = "Enter  open",
+					flex = 12,
+					size = 1,
+					align = "center",
+					is_focusable = false,
+					border_style = "none",
+					hidden = signal.is_insert,
+				}),
+				n.button({
+					id = "hint-close",
+					label = "q  close",
+					flex = 9,
+					size = 1,
+					align = "center",
+					is_focusable = false,
+					border_style = "none",
+					hidden = signal.is_insert,
+				}),
+				n.button({
+					id = "hint-normal-mode",
+					label = "Esc  normal mode",
+					flex = 16,
+					size = 1,
+					align = "center",
+					is_focusable = false,
+					border_style = "none",
+					hidden = signal.is_insert:negate(),
+				}),
+				n.button({
+					id = "hint-insert-navigate",
+					label = "Ctrl-N/P  navigate",
+					flex = 19,
+					size = 1,
+					align = "center",
+					is_focusable = false,
+					border_style = "none",
+					hidden = signal.is_insert:negate(),
+				})
+			)
 		)
 	end
 
