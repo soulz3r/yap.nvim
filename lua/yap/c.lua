@@ -123,6 +123,18 @@ function M.setup()
 	if configured then return M end
 	configured = true
 
+	local group = vim.api.nvim_create_augroup("YapCTools", { clear = true })
+	vim.api.nvim_create_autocmd("FileType", {
+		group = group,
+		pattern = { "c", "cpp" },
+		callback = function(args)
+			vim.keymap.set("n", "<leader>pi", compile_metadata, {
+				buffer = args.buf,
+				desc = "C: Project information",
+			})
+		end,
+	})
+
 	vim.api.nvim_create_user_command("CInsertInclude", insert_include, { desc = "Insert a C include directive" })
 	vim.api.nvim_create_user_command("CProjectInfo", compile_metadata, { desc = "Show C project metadata" })
 	vim.api.nvim_create_user_command("CSwitchHeader", switch_header_source, { desc = "Switch C source/header" })
