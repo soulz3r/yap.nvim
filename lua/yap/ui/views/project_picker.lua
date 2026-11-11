@@ -3,9 +3,14 @@ local M = {}
 local registry = require("yap.project_registry")
 local layout = require("yap.ui.layout")
 
-local Input = require("yap.ui.components.input")
-local SelectableList = require("yap.ui.components.selectable_list")
-local style = require("yap.ui.components.style")
+local Components = require("yap.ui.components")
+
+local Input = Components.Input
+local SelectableList = Components.SelectableList
+local Panel = Components.Panel
+local Paragraph = Components.Paragraph
+local Description = Components.Description
+local KeymapHints = Components.KeymapHints
 
 local markers = {
 	".git",
@@ -207,25 +212,6 @@ local function find_project(entries, root)
 	end
 end
 
-local function hints_for(mode)
-	if mode == "insert" then
-		return "Esc  normal mode     Ctrl-N/P  navigate     Enter  open"
-	end
-	return "i  search     j/k or Ctrl-N/P  navigate     Enter  open     q  close"
-end
-
-local function description_lines(n, readme)
-	local lines = {}
-
-	if readme then
-		for _, line in ipairs(vim.split(readme, "\n", { plain = true })) do
-			lines[#lines + 1] = n.line(line)
-		end
-	end
-
-	return lines
-end
-
 function M.open(opts)
 	opts = opts or {}
 	local n = require("nui-components")
@@ -235,27 +221,7 @@ function M.open(opts)
 
 	local preview_content = preview_for(first)
 	local readme_content = initial_readme
-	local current_hints = hints_for("normal")
-	local preview_component
-	local description_component
-
-	local function refresh_footers()
-		vim.schedule(function()
-			local has_readme = readme_content ~= nil
-
-			local function set_footer(component, value)
-				if component and component.winid and vim.api.nvim_win_is_valid(component.winid) then
-					vim.api.nvim_win_set_config(component.winid, {
-						footer = value,
-						footer_pos = "right",
-					})
-				end
-			end
-
-			set_footer(preview_component, has_readme and "" or current_hints)
-			set_footer(description_component, has_readme and current_hints or "")
-		end)
-	end
+	local current_mode = "normal"
 
 	local renderer = layout.create_renderer(opts)
 
@@ -263,8 +229,8 @@ function M.open(opts)
 		filtered = make_nodes(n, entries),
 		selected_path = first and first.root or "",
 		preview_lines = preview_content,
-		description_lines = description_lines(n, initial_readme),
-		hints = current_hints,
+		description_lines = initial_readme and vim.split(initial_readme, "\n", { plain = true }) or {},
+		is_insert = false,
 		has_readme = initial_readme ~= nil,
 		has_results = #entries > 0,
 		empty_message = #entries > 0 and "No matching C projects" or "No C projects found",
@@ -272,10 +238,9 @@ function M.open(opts)
 
 	local function refresh_content()
 		signal.preview_lines = preview_content
-		signal.description_lines = description_lines(n, readme_content)
+		signal.description_lines = readme_content and vim.split(readme_content, "\n", { plain = true }) or {}
 		signal.has_readme = readme_content ~= nil
-		signal.hints = current_hints
-		refresh_footers()
+		signal.is_insert = current_mode == "insert"
 	end
 
 	local function update_preview(project)
@@ -375,10 +340,12 @@ function M.open(opts)
 				end,
 			}),
 			n.columns({ flex = 1 },
-				n.rows({ flex = 1 },
+				Panel({
+					id = "project-list-panel",
+					flex = 1,
+					border_label = "Projects",
+				},
 					SelectableList(n, {
-						border_style = "rounded",
-						border_label = "Projects",
 						data = signal.filtered,
 						hidden = signal.has_results:negate(),
 						on_change = function(node)
@@ -392,42 +359,38 @@ function M.open(opts)
 							end
 						end,
 					}),
-					n.paragraph(style.with_defaults({
+					Paragraph(n, {
 						id = "project-empty-message",
-						border_style = "rounded",
-						border_label = "Projects",
 						size = 1,
-						is_focusable = false,
-						align = "left",
 						lines = signal.empty_message,
 						hidden = signal.has_results,
-					}))
+					})
 				),
 				n.rows({ flex = 1.35, padding = { left = 1 } },
-					n.paragraph(style.with_defaults({
+					Paragraph(n, {
 						id = "project-preview",
 						border_style = "rounded",
 						border_label = "Preview",
 						flex = 1,
-						is_focusable = false,
-						align = "left",
 						truncate = true,
 						lines = signal.preview_lines,
-					}))
+					})
 				)
 			),
 
-			n.paragraph(style.with_defaults({
+			Description(n, {
 				id = "project-description",
-				border_style = "rounded",
-				border_label = "Description",
-				is_focusable = false,
-				align = "left",
-				max_lines = 9,
-				truncate = false,
 				lines = signal.description_lines,
 				hidden = signal.has_readme:negate(),
-			}))
+			}),
+			KeymapHints(n, {
+				{ key = "i", label = "search", hidden = signal.is_insert },
+				{ key = "j/k", label = "navigate", hidden = signal.is_insert },
+				{ key = "Enter", label = "open", hidden = signal.is_insert },
+				{ key = "q", label = "close", hidden = signal.is_insert },
+				{ key = "Esc", label = "normal mode", hidden = signal.is_insert:negate() },
+				{ key = "Ctrl-N/P", label = "navigate", hidden = signal.is_insert:negate() },
+			})
 		)
 	end
 
@@ -441,7 +404,7 @@ function M.open(opts)
 					return
 				end
 				input:focus()
-				current_hints = hints_for("insert")
+				current_mode = "insert"
 				refresh_content()
 				vim.schedule(function()
 					if vim.api.nvim_win_is_valid(input.winid) then
@@ -454,7 +417,7 @@ function M.open(opts)
 			mode = { "i" },
 			key = "<Esc>",
 			handler = function()
-				current_hints = hints_for("normal")
+				current_mode = "normal"
 				refresh_content()
 				vim.schedule(function()
 					local input = renderer:get_component_by_id("project-search")
@@ -498,12 +461,6 @@ function M.open(opts)
 			handler = close,
 		},
 	})
-
-	renderer:on_mount(function()
-		preview_component = renderer:get_component_by_id("project-preview")
-		description_component = renderer:get_component_by_id("project-description")
-		refresh_footers()
-	end)
 
 	renderer:render(body)
 	return renderer

@@ -21,7 +21,12 @@ function Panel:init(props, popup_options)
 end
 
 return function(props, ...)
-	props = props or {}
-	props.children = { ... }
-	return Panel(props)
+	local component_props = {}
+
+	for key, value in pairs(props or {}) do
+		component_props[key] = value
+	end
+
+	component_props.children = { ... }
+	return Panel(component_props)
 end
