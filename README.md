@@ -58,6 +58,32 @@ The shared `ActionBar` component owns a separate NuiComponents renderer and its 
 
 This keeps action bars reusable across the project picker, build output, diagnostics, and other YAP interfaces without coupling them to a particular view.
 
+A view can mount one with its own action definitions:
+
+```lua
+local ActionBar = require("yap.ui.components.action_bar")
+
+local action_bar = ActionBar.new({
+  parent = renderer,
+  position = "bottom",
+  style = "flat",
+  actions = {
+    {
+      key = "q",
+      label = "close",
+      handler = close_view,
+      mode = { "n" },
+    },
+  },
+})
+
+action_bar:mount()
+action_bar:update(actions, "normal")
+action_bar:close()
+```
+
+Supported positions relative to a parent renderer are `"top"` and `"bottom"`. An explicit `{ row = ..., col = ... }` position can be used for editor-relative placement. Action definitions accept `key`, `label`, `hint`, `mode`, and either `handler` or `on_press`.
+
 ## Colors
 
 YAP exposes a `highlights` option in `setup()`. Each entry accepts the same highlight options as `vim.api.nvim_set_hl()`, including `fg`, `bg`, `bold`, `italic`, and `link`. Colors are reapplied after every `ColorScheme` event.
