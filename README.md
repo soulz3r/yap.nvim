@@ -52,7 +52,11 @@ NuiComponents is used for YAP's floating output and C/C++ project-information vi
 
 ## UI
 
-YAP uses NuiComponents for its floating views and the C-project switcher. The process-output buffer remains a normal Neovim buffer, so ANSI parsing, compiler diagnostics, quickfix extraction, and streaming process output stay in YAP's existing project engine. The project switcher separates project discovery, filtering, preview generation, keymap actions, and rendering into dedicated modules. Its shortcut footer is a single borderless paragraph generated from the same action definitions used to register picker keymaps, so its hints change with the active mode and cannot drift away from the actual mappings.
+YAP uses NuiComponents for its floating views and the C-project switcher. The process-output buffer remains a normal Neovim buffer, so ANSI parsing, compiler diagnostics, quickfix extraction, and streaming process output stay in YAP's existing project engine. The project switcher separates project discovery, filtering, preview generation, keymap actions, and rendering into dedicated modules.
+
+The shared `ActionBar` component owns a separate NuiComponents renderer and its own floating windows. It is not a child of the view that uses it, so it does not inherit that view's panel, border, or layout. Views provide action definitions and callbacks, while the action bar handles button rendering, mode filtering, placement, and cleanup. It supports flat borderless buttons by default and an outlined style when needed. Its position can be set relative to a parent renderer (for example, `position = "bottom"`) or with explicit editor-relative coordinates.
+
+This keeps action bars reusable across the project picker, build output, diagnostics, and other YAP interfaces without coupling them to a particular view.
 
 ## Colors
 
