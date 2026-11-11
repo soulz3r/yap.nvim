@@ -386,7 +386,6 @@ function M.open(opts)
 				id = "project-keymap-hints",
 				flex = 1,
 				size = 1,
-				gap = 1,
 			},
 				n.button({
 					id = "hint-search",
