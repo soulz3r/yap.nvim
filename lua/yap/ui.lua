@@ -200,9 +200,13 @@ function M.open_text(lines, title, opts)
 		wrap = opts.wrap == true,
 		cursorline = true,
 		on_mount = function(_, win)
-			if vim.api.nvim_win_is_valid(win) then
-				vim.api.nvim_set_current_win(win)
-			end
+			-- NuiComponents may restore the previous window after its mount
+			-- callback. Focus the rendered window on the next event-loop turn.
+			vim.schedule(function()
+				if vim.api.nvim_win_is_valid(win) then
+					vim.api.nvim_set_current_win(win)
+				end
+			end)
 		end,
 	})
 
