@@ -238,11 +238,25 @@ function M.open(opts)
 		hint_lines = KeymapHints.build({}),
 	})
 
+	local function visible_hints()
+		local mode = current_mode == "insert" and "i" or "n"
+		local hints = {}
+
+		for _, action in ipairs(keymap_actions) do
+			if action.hint and vim.tbl_contains(action.mode, mode) then
+				hints[#hints + 1] = action.hint
+			end
+		end
+
+		return hints
+	end
+
 	local function refresh_content()
 		signal.preview_lines = preview_content
-		signal.description_lines = readme_content and vim.split(readme_content, "\n", { plain = true }) or {}
+		signal.description_lines = readme_content and vim.split(readme_content, "\\n", { plain = true }) or {}
 		signal.has_readme = readme_content ~= nil
 		signal.is_insert = current_mode == "insert"
+		signal.hint_lines = KeymapHints.build(visible_hints())
 	end
 
 	local function update_preview(project)
