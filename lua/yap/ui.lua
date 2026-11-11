@@ -54,16 +54,6 @@ local function apply_highlights(highlights)
 
 	vim.api.nvim_set_hl(0, "NuiComponentsTreeNodeFocused", { link = "YapSectionTitle" })
 	vim.api.nvim_set_hl(0, "NuiComponentsPromptPrefix", { link = "YapMuted" })
-	local muted = vim.api.nvim_get_hl(0, { name = "YapMuted", link = false })
-	local button_highlight = {
-		fg = muted.fg,
-		bg = "NONE",
-		ctermbg = "NONE",
-	}
-
-	vim.api.nvim_set_hl(0, "NuiComponentsButton", button_highlight)
-	vim.api.nvim_set_hl(0, "NuiComponentsButtonActive", button_highlight)
-	vim.api.nvim_set_hl(0, "NuiComponentsButtonFocus", button_highlight)
 end
 
 function M.apply(win)
