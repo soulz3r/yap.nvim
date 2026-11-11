@@ -202,14 +202,14 @@ function M.open_text(lines, title, opts)
 		cursorline = true,
 		on_mount = opts.close_on_blur and function(_, win)
 			local autocmd
-			autocmd = vim.api.nvim_create_autocmd("WinLeave", {
+			autocmd = vim.api.nvim_create_autocmd("WinEnter", {
 				callback = function()
 					if not vim.api.nvim_win_is_valid(win) then
 						vim.api.nvim_del_autocmd(autocmd)
 						return
 					end
 
-					if vim.api.nvim_get_current_win() ~= win then
+					if vim.api.nvim_get_current_win() == win then
 						return
 					end
 
