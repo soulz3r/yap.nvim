@@ -1,4 +1,5 @@
 return {
+	Button = require("yap.ui.components.button"),
 	Description = require("yap.ui.components.description"),
 	Input = require("yap.ui.components.input"),
 	KeymapHints = require("yap.ui.components.keymap_hints"),
