@@ -52,13 +52,13 @@ NuiComponents is used for YAP's floating output and C/C++ project-information vi
 
 ## UI
 
-YAP uses NuiComponents for its floating views and the C-project switcher. The process-output buffer remains a normal Neovim buffer, so ANSI parsing, compiler diagnostics, quickfix extraction, and streaming process output stay in YAP's existing project engine. The project switcher is composed from shared components exported by `yap.ui.components`: input, selectable list, panel, paragraph, and description. Its shortcut footer is a single borderless paragraph. The footer is generated from the same action definitions used to register picker keymaps, so its hints change with the active mode and cannot drift away from the actual mappings.
+YAP uses NuiComponents for its floating views and the C-project switcher. The process-output buffer remains a normal Neovim buffer, so ANSI parsing, compiler diagnostics, quickfix extraction, and streaming process output stay in YAP's existing project engine. The project switcher separates project discovery, filtering, preview generation, keymap actions, and rendering into dedicated modules. Its shortcut footer is a single borderless paragraph generated from the same action definitions used to register picker keymaps, so its hints change with the active mode and cannot drift away from the actual mappings.
 
 ## Colors
 
 YAP exposes a `highlights` option in `setup()`. Each entry accepts the same highlight options as `vim.api.nvim_set_hl()`, including `fg`, `bg`, `bold`, `italic`, and `link`. Colors are reapplied after every `ColorScheme` event.
 
-Available keys are `normal`, `border`, `title`, `section_title`, `muted`, `success`, `warning`, `error`, `command`, `path`, `phase`, `metadata`, and `diagnostic`. Omit any key to keep its default link to the corresponding Neovim highlight group. Use `bg = "NONE"` for transparent float content and borders.
+Available keys are `normal`, `border`, `title`, `section_title`, `muted`, `success`, `warning`, `error`, `command`, `path`, `phase`, `metadata`, `keymap_key`, and `diagnostic`. Omit any key to keep its default link to the corresponding Neovim highlight group. Use `bg = "NONE"` for transparent float content and borders.
 
 The float uses the plugin-owned `YapFloatNormal`, `YapFloatBorder`, and `YapFloatTitle` groups, so its appearance can be customized without changing global Neovim highlights.
 
