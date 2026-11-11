@@ -1,0 +1,112 @@
+-- YAP UI system prototype
+--
+-- DESIGN ONLY. This file intentionally contains no executable implementation.
+-- Read docs/ui-system.md before implementing the manager or components.
+--
+-- Public entry point (future):
+--
+-- local UI = require("yap.ui.manager")
+--
+-- UI.register("tree", require("yap.ui.components.tree"))
+-- UI.register("preview", require("yap.ui.components.preview"))
+--
+-- local session = UI.open({
+--     size = { width = 0.80, height = 0.70 },
+--     layout = { direction = "row", gap = 1 },
+--     items = shared_context,
+--     panels = {
+--         {
+--             id = "navigation",
+--             type = "tree",
+--             name = "Project files",
+--             at = 1,
+--             size = { width = 0.35 },
+--             options = {
+--                 items = file_items,
+--                 callbacks = {
+--                     on_select = on_file_selected,
+--                     on_error = on_component_error,
+--                 },
+--             },
+--         },
+--         {
+--             id = "details",
+--             type = "preview",
+--             name = "Preview",
+--             at = 2,
+--             size = { width = 0.65 },
+--             options = { source = preview_source },
+--         },
+--     },
+--     callbacks = {
+--         on_open = on_open,
+--         on_close = on_close,
+--         on_error = on_ui_error,
+--     },
+-- })
+--
+-- Future component factory:
+--
+-- local yTree = {}
+-- function yTree.new(options)
+--     -- Validate options and initialize private state. No windows yet.
+--     return setmetatable({
+--         items = options.items or {},
+--         callbacks = options.callbacks or {},
+--         resources = {},
+--         mounted = false,
+--     }, { __index = yTree })
+-- end
+--
+-- function yTree:mount(panel_context)
+--     -- Attach to the panel host and allocate only resources owned by this tree.
+-- end
+--
+-- function yTree:update(items)
+--     -- Replace/update data and redraw this component only.
+-- end
+--
+-- function yTree:focus()
+--     -- Ask the session/backend to focus this component.
+-- end
+--
+-- function yTree:handle_key(key)
+--     -- Return true when this component consumed the key.
+-- end
+--
+-- function yTree:close()
+--     -- Stop interaction and release temporary resources.
+-- end
+--
+-- function yTree:destroy()
+--     -- Idempotently clear mappings, autocmds, namespaces, buffers, windows,
+--     -- timers, and overlays owned by this component.
+-- end
+--
+-- Future manager responsibilities:
+--
+-- UI.open(spec)
+--     -> validate spec and registered component types
+--     -> derive panel/item counts
+--     -> create session and root backend resources
+--     -> calculate panel geometry
+--     -> create panel hosts
+--     -> instantiate and mount each component through safe_call()
+--     -> return session handle
+--
+-- session:close()
+--     -> stop session input
+--     -> close panels in reverse mount order
+--     -> close registered overlays
+--     -> restore editor state
+--     -> invoke on_close through safe_call()
+--
+-- Error policy:
+--
+-- safe_call(owner, callback_name, callback, ...)
+--     -> xpcall(callback, debug.traceback, ...)
+--     -> route failure to component/session on_error
+--     -> notify with traceback if unhandled
+--     -> continue cleanup even if cleanup callbacks fail
+--
+-- Do not add NuiComponents here. The UI backend will use Neovim APIs directly.
