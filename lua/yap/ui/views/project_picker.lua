@@ -252,7 +252,7 @@ function M.open(opts)
 
 	local function refresh_content()
 		signal.preview_lines = preview_content
-		signal.description_lines = readme_content and vim.split(readme_content, "\\n", { plain = true }) or {}
+		signal.description_lines = readme_content and vim.split(readme_content, "\n", { plain = true }) or {}
 		signal.has_readme = readme_content ~= nil
 		signal.hint_lines = KeymapHints.build(visible_hints())
 	end
