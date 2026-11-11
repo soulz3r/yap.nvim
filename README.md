@@ -63,22 +63,24 @@ A view can mount one with its own action definitions:
 ```lua
 local ActionBar = require("yap.ui.components.action_bar")
 
+local actions = {
+  {
+    key = "q",
+    label = "close",
+    handler = close_view,
+    mode = { "n" },
+  },
+}
+
 local action_bar = ActionBar.new({
   parent = renderer,
   position = "bottom",
   style = "flat",
-  actions = {
-    {
-      key = "q",
-      label = "close",
-      handler = close_view,
-      mode = { "n" },
-    },
-  },
+  actions = actions,
 })
 
 action_bar:mount()
-action_bar:update(actions, "normal")
+action_bar:update(actions, "insert")
 action_bar:close()
 ```
 
