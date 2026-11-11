@@ -127,21 +127,26 @@ function M.setup()
 	if configured then return M end
 	configured = true
 
+	local function configure_buffer(buf)
+		if vim.bo[buf].filetype == "c" or vim.bo[buf].filetype == "cpp" then
+			vim.keymap.set("n", "<leader>pi", compile_metadata, {
+				buffer = buf,
+				desc = "C: Project information",
+			})
+		else
+			pcall(vim.keymap.del, "n", "<leader>pi", { buffer = buf })
+		end
+	end
+
 	local group = vim.api.nvim_create_augroup("YapCTools", { clear = true })
 	vim.api.nvim_create_autocmd("FileType", {
 		group = group,
 		pattern = "*",
 		callback = function(args)
-			if vim.bo[args.buf].filetype == "c" or vim.bo[args.buf].filetype == "cpp" then
-				vim.keymap.set("n", "<leader>pi", compile_metadata, {
-					buffer = args.buf,
-					desc = "C: Project information",
-				})
-			else
-				pcall(vim.keymap.del, "n", "<leader>pi", { buffer = args.buf })
-			end
+			configure_buffer(args.buf)
 		end,
 	})
+	configure_buffer(vim.api.nvim_get_current_buf())
 
 	vim.api.nvim_create_user_command("CInsertInclude", insert_include, { desc = "Insert a C include directive" })
 	vim.api.nvim_create_user_command("CProjectInfo", compile_metadata, { desc = "Show C project metadata" })
