@@ -130,12 +130,12 @@ function M.setup()
 		callback = function(args)
 			vim.keymap.set(
 				"n",
-				"<leader>pch",
+				"<leader>ch",
 				switch_header_source,
 				{ buffer = args.buf, desc = "C: Switch source/header" }
 			)
-			vim.keymap.set("n", "<leader>pci", insert_include, { buffer = args.buf, desc = "C: Insert include" })
-			vim.keymap.set("n", "<leader>pcI", compile_metadata, { buffer = args.buf, desc = "C: Project information" })
+			vim.keymap.set("n", "<leader>ci", insert_include, { buffer = args.buf, desc = "C: Insert include" })
+			vim.keymap.set("n", "<leader>pi", compile_metadata, { buffer = args.buf, desc = "C: Project information" })
 		end,
 	})
 
