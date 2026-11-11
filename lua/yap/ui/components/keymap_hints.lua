@@ -12,7 +12,7 @@ function M.build(hints)
 			line:append("   ", "Normal")
 		end
 
-		line:append(hint.key, "NuiComponentsButtonActive")
+		line:append(hint.key, "YapKeymapKey")
 		line:append(" ", "Normal")
 		line:append(hint.label, "YapMuted")
 	end
