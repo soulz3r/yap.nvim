@@ -200,7 +200,7 @@ function M.open_text(lines, title, opts)
 		title = title,
 		wrap = opts.wrap == true,
 		cursorline = true,
-		on_mount = opts.close_on_blur and function(_, win)
+		on_mount = opts.close_on_blur and function(mounted_renderer, win)
 			local autocmd
 			autocmd = vim.api.nvim_create_autocmd("WinEnter", {
 				callback = function()
@@ -216,7 +216,7 @@ function M.open_text(lines, title, opts)
 					vim.api.nvim_del_autocmd(autocmd)
 					vim.schedule(function()
 						if vim.api.nvim_win_is_valid(win) then
-							renderer:close()
+							mounted_renderer:close()
 						end
 					end)
 				end,
