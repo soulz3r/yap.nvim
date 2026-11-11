@@ -52,7 +52,7 @@ NuiComponents is used for YAP's floating output and C/C++ project-information vi
 
 ## UI
 
-YAP uses NuiComponents for its floating views and the C-project switcher. The process-output buffer remains a normal Neovim buffer, so ANSI parsing, compiler diagnostics, quickfix extraction, and streaming process output stay in YAP's existing project engine. The project switcher is composed from shared components exported by `yap.ui.components`: input, selectable list, panel, paragraph, and description. Its shortcut hints are built directly with NuiComponents buttons in a horizontal row. They are informational, non-focusable, and rendered outside the bordered panels.
+YAP uses NuiComponents for its floating views and the C-project switcher. The process-output buffer remains a normal Neovim buffer, so ANSI parsing, compiler diagnostics, quickfix extraction, and streaming process output stay in YAP's existing project engine. The project switcher is composed from shared components exported by `yap.ui.components`: input, selectable list, panel, paragraph, and description. Its shortcut footer is a single borderless paragraph. The footer is generated from the same action definitions used to register picker keymaps, so its hints change with the active mode and cannot drift away from the actual mappings.
 
 ## Colors
 
