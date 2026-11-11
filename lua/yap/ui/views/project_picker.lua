@@ -394,6 +394,12 @@ function M.open(opts)
 					size = 1,
 					align = "center",
 					is_focusable = false,
+					window = {
+						highlight = {
+							NormalFloat = "Normal",
+							FloatBorder = "Normal",
+						},
+					},
 					hidden = signal.is_insert,
 				}),
 				n.button({
@@ -403,6 +409,12 @@ function M.open(opts)
 					size = 1,
 					align = "center",
 					is_focusable = false,
+					window = {
+						highlight = {
+							NormalFloat = "Normal",
+							FloatBorder = "Normal",
+						},
+					},
 					hidden = signal.is_insert,
 				}),
 				n.button({
@@ -412,6 +424,12 @@ function M.open(opts)
 					size = 1,
 					align = "center",
 					is_focusable = false,
+					window = {
+						highlight = {
+							NormalFloat = "Normal",
+							FloatBorder = "Normal",
+						},
+					},
 					hidden = signal.is_insert,
 				}),
 				n.button({
@@ -421,6 +439,12 @@ function M.open(opts)
 					size = 1,
 					align = "center",
 					is_focusable = false,
+					window = {
+						highlight = {
+							NormalFloat = "Normal",
+							FloatBorder = "Normal",
+						},
+					},
 					hidden = signal.is_insert,
 				}),
 				n.button({
@@ -430,6 +454,12 @@ function M.open(opts)
 					size = 1,
 					align = "center",
 					is_focusable = false,
+					window = {
+						highlight = {
+							NormalFloat = "Normal",
+							FloatBorder = "Normal",
+						},
+					},
 					hidden = signal.is_insert:negate(),
 				}),
 				n.button({
@@ -439,6 +469,12 @@ function M.open(opts)
 					size = 1,
 					align = "center",
 					is_focusable = false,
+					window = {
+						highlight = {
+							NormalFloat = "Normal",
+							FloatBorder = "Normal",
+						},
+					},
 					hidden = signal.is_insert:negate(),
 				})
 			)
