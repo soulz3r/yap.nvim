@@ -31,12 +31,17 @@ end
 
 function ActionBar:_button_props(action, index)
 	local hint = get_hint(action)
-	local label = table.concat(vim.tbl_filter(function(value)
-		return type(value) == "string" and value ~= ""
-	end, {
-		hint.key,
-		hint.label,
-	}), " ")
+	local label_parts = {}
+
+	if type(hint.key) == "string" and hint.key ~= "" then
+		label_parts[#label_parts + 1] = hint.key
+	end
+
+	if type(hint.label) == "string" and hint.label ~= "" then
+		label_parts[#label_parts + 1] = hint.label
+	end
+
+	local label = table.concat(label_parts, " ")
 
 	local border_style = self.opts.style == "outlined" and "rounded" or "none"
 
@@ -49,7 +54,10 @@ function ActionBar:_button_props(action, index)
 		is_focusable = true,
 		border_style = border_style,
 		press_key = { "<CR>", "<Space>" },
-		on_press = action.on_press or action.handler,
+		on_press = function()
+			local callback = action.on_press or action.handler
+			callback()
+		end,
 		window = {
 			highlight = {
 				NormalFloat = self.opts.style == "outlined" and "YapFloatNormal" or "Normal",
@@ -147,15 +155,19 @@ function ActionBar:mount()
 end
 
 function ActionBar:update(actions, mode)
-	if actions then
+	local changed = false
+
+	if actions and actions ~= self.actions then
 		self.actions = actions
+		changed = true
 	end
 
-	if mode then
+	if mode and mode ~= self.mode then
 		self.mode = mode
+		changed = true
 	end
 
-	if not self.closed then
+	if changed and not self.closed then
 		self:_render()
 	end
 end
