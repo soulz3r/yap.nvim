@@ -27,7 +27,6 @@ function M.new(n, props)
 		size = 1,
 		is_focusable = false,
 		border_style = "none",
-		padding = 0,
 		truncate = true,
 		window = {
 			highlight = {
