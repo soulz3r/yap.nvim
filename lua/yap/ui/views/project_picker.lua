@@ -3,6 +3,11 @@ local M = {}
 local registry = require("yap.project_registry")
 local layout = require("yap.ui.layout")
 
+local Discovery = require("yap.ui.views.project_picker.discovery")
+local Preview = require("yap.ui.views.project_picker.preview")
+local Keymaps = require("yap.ui.views.project_picker.keymaps")
+local KeymapHints = require("yap.ui.components.keymap_hints")
+
 local Components = require("yap.ui.components")
 
 local Input = Components.Input
@@ -10,216 +15,15 @@ local SelectableList = Components.SelectableList
 local Panel = Components.Panel
 local Paragraph = Components.Paragraph
 local Description = Components.Description
-local KeymapHints = require("yap.ui.components.keymap_hints")
-
-local markers = {
-	".git",
-	"build.sh",
-	"build.bat",
-	"build_all.sh",
-	"build_all.bat",
-	"compile_commands.json",
-	"compile_flags.txt",
-	"CMakeLists.txt",
-	"Makefile",
-}
-
-local preview_limits = {
-	depth = 3,
-	entries = 60,
-}
-
-local function normalize(path)
-	path = vim.fs.normalize(vim.fn.fnamemodify(path, ":p"))
-	return vim.fn.has("win32") == 1 and path:lower() or path
-end
-
-local function is_c_project(root)
-	if vim.fn.isdirectory(root) ~= 1 then
-		return false
-	end
-
-	return #vim.fn.globpath(root, "**/*.c", false, true) > 0
-end
-
-local function collect_projects(projects_dir)
-	local found = {}
-	local seen = {}
-
-	local function add(path)
-		if type(path) ~= "string" or path == "" or vim.fn.isdirectory(path) ~= 1 then
-			return
-		end
-
-		local root = vim.fs.root(path, markers) or path
-		root = vim.fs.normalize(vim.fn.fnamemodify(root, ":p"))
-		local key = normalize(root)
-
-		if seen[key] or not is_c_project(root) then
-			return
-		end
-
-		seen[key] = true
-		local metadata = registry.get(root) or {}
-
-		found[#found + 1] = {
-			id = root,
-			root = root,
-			name = vim.fn.fnamemodify(root, ":t"),
-			last_opened = metadata.last_opened or 0,
-		}
-	end
-
-	for _, entry in ipairs(registry.list()) do
-		add(entry.root)
-	end
-
-	if type(projects_dir) == "string" and vim.fn.isdirectory(projects_dir) == 1 then
-		for name, kind in vim.fs.dir(projects_dir) do
-			if kind == "directory" then
-				add(projects_dir .. "/" .. name)
-			end
-		end
-	end
-
-	table.sort(found, function(a, b)
-		if a.last_opened ~= b.last_opened then
-			return a.last_opened > b.last_opened
-		end
-		return a.name:lower() < b.name:lower()
-	end)
-
-	return found
-end
-
-local function fuzzy_match(query, candidate)
-	query = query:lower()
-	candidate = candidate:lower()
-
-	if query == "" then
-		return true
-	end
-
-	local query_index = 1
-	for index = 1, #candidate do
-		if candidate:sub(index, index) == query:sub(query_index, query_index) then
-			query_index = query_index + 1
-			if query_index > #query then
-				return true
-			end
-		end
-	end
-
-	return false
-end
-
-local function readme_for(root)
-	for _, name in ipairs({ "README.md", "readme.md" }) do
-		local path = root .. "/" .. name
-		if vim.fn.filereadable(path) == 1 then
-			local lines = vim.fn.readfile(path, "", 8)
-			if #lines == 0 then
-				lines = { "(README is empty)" }
-			elseif #lines == 8 then
-				lines[8] = "…"
-			end
-			return table.concat(lines, "\n")
-		end
-	end
-end
-
-local function preview_for(project)
-	if not project then
-		return "Select a project to preview its files."
-	end
-
-	local lines = { project.name .. "/" }
-	local count = 0
-	local skipped = false
-
-	local function append_directory(path, prefix, depth)
-		local entries = {}
-
-		for name, kind in vim.fs.dir(path) do
-			if name ~= ".git" then
-				entries[#entries + 1] = {
-					name = name,
-					kind = kind,
-				}
-			end
-		end
-
-		table.sort(entries, function(a, b)
-			local a_dir = a.kind == "directory"
-			local b_dir = b.kind == "directory"
-			if a_dir ~= b_dir then
-				return a_dir
-			end
-			return a.name:lower() < b.name:lower()
-		end)
-
-		for index, entry in ipairs(entries) do
-			if count >= preview_limits.entries then
-				skipped = true
-				return
-			end
-
-			count = count + 1
-			local is_last = index == #entries
-			local branch = is_last and "└── " or "├── "
-			local child_prefix = prefix .. (is_last and "    " or "│   ")
-			local is_directory = entry.kind == "directory"
-
-			lines[#lines + 1] = prefix .. branch .. entry.name .. (is_directory and "/" or "")
-
-			if is_directory and depth < preview_limits.depth then
-				append_directory(vim.fs.joinpath(path, entry.name), child_prefix, depth + 1)
-				if skipped then
-					return
-				end
-			end
-		end
-	end
-
-	append_directory(project.root, "", 1)
-
-	if skipped then
-		lines[#lines + 1] = "… more files"
-	elseif count == 0 then
-		lines[#lines + 1] = "└── (empty project)"
-	end
-
-	return table.concat(lines, "\n")
-end
-
-local function make_nodes(n, entries)
-	local nodes = {}
-	for _, project in ipairs(entries) do
-		nodes[#nodes + 1] = n.node({
-			id = project.root,
-			path = project.root,
-			text = project.name,
-		})
-	end
-	return nodes
-end
-
-local function find_project(entries, root)
-	for _, project in ipairs(entries) do
-		if normalize(project.root) == normalize(root) then
-			return project
-		end
-	end
-end
 
 function M.open(opts)
 	opts = opts or {}
 	local n = require("nui-components")
-	local entries = collect_projects(opts.projects_dir)
+	local entries = Discovery.collect(opts.projects_dir)
 	local first = entries[1]
-	local initial_readme = first and readme_for(first.root) or nil
+	local initial_readme = first and Preview.readme(first.root) or nil
 
-	local preview_content = preview_for(first)
+	local preview_content = Preview.tree(first)
 	local readme_content = initial_readme
 	local current_mode = "normal"
 	local keymap_actions = {}
@@ -227,7 +31,7 @@ function M.open(opts)
 	local renderer = layout.create_renderer(opts)
 
 	local signal = n.create_signal({
-		filtered = make_nodes(n, entries),
+		filtered = Discovery.nodes(n, entries),
 		selected_path = first and first.root or "",
 		preview_lines = preview_content,
 		description_lines = initial_readme and vim.split(initial_readme, "\n", { plain = true }) or {},
@@ -237,30 +41,18 @@ function M.open(opts)
 		hint_lines = KeymapHints.build({}),
 	})
 
-	local function visible_hints()
-		local mode = current_mode == "insert" and "i" or "n"
-		local hints = {}
-
-		for _, action in ipairs(keymap_actions) do
-			if action.hint and vim.tbl_contains(action.mode, mode) then
-				hints[#hints + 1] = action.hint
-			end
-		end
-
-		return hints
-	end
 
 	local function refresh_content()
 		signal.preview_lines = preview_content
 		signal.description_lines = readme_content and vim.split(readme_content, "\n", { plain = true }) or {}
 		signal.has_readme = readme_content ~= nil
-		signal.hint_lines = KeymapHints.build(visible_hints())
+		signal.hint_lines = KeymapHints.build(Keymaps.hints(keymap_actions, current_mode))
 	end
 
 	local function update_preview(project)
 		signal.selected_path = project and project.root or ""
-		preview_content = preview_for(project)
-		readme_content = project and readme_for(project.root) or nil
+		preview_content = Preview.tree(project)
+		readme_content = project and Preview.readme(project.root) or nil
 		refresh_content()
 	end
 
@@ -276,15 +68,9 @@ function M.open(opts)
 	end
 
 	local function set_filter(query)
-		local filtered = {}
+		local filtered = Discovery.filter(entries, query)
 
-		for _, project in ipairs(entries) do
-			if fuzzy_match(query, project.name) or fuzzy_match(query, project.root) then
-				filtered[#filtered + 1] = project
-			end
-		end
-
-		signal.filtered = make_nodes(n, filtered)
+		signal.filtered = Discovery.nodes(n, filtered)
 		signal.has_results = #filtered > 0
 		signal.empty_message = #entries == 0 and "No C projects found" or "No matching C projects"
 
@@ -364,7 +150,7 @@ function M.open(opts)
 						hidden = signal.has_results:negate(),
 						on_change = function(node)
 							if node then
-								update_preview(find_project(entries, node.path))
+								update_preview(Discovery.find(entries, node.path))
 							end
 						end,
 						on_select = function(node)
@@ -403,86 +189,17 @@ function M.open(opts)
 		)
 	end
 
-	keymap_actions = {
-		{
-			mode = { "n" },
-			key = "i",
-			hint = { key = "i", label = "search" },
-			handler = function()
-				local input = renderer:get_component_by_id("project-search")
-				if not input then
-					return
-				end
-				input:focus()
-				current_mode = "insert"
-				refresh_content()
-				vim.schedule(function()
-					if vim.api.nvim_win_is_valid(input.winid) then
-						vim.cmd("startinsert")
-					end
-				end)
-			end,
-		},
-		{
-			mode = { "i" },
-			key = "<Esc>",
-			hint = { key = "Esc", label = "normal mode" },
-			handler = function()
-				current_mode = "normal"
-				refresh_content()
-				vim.schedule(function()
-					local input = renderer:get_component_by_id("project-search")
-					if input and vim.api.nvim_get_current_win() == input.winid then
-						vim.cmd("stopinsert")
-					end
-				end)
-			end,
-		},
-		{
-			mode = { "n", "i" },
-			key = "<C-n>",
-			hint = { key = "Ctrl-N/P", label = "navigate" },
-			handler = function()
-				move_selection("next")
-			end,
-		},
-		{
-			mode = { "n", "i" },
-			key = "<C-p>",
-			handler = function()
-				move_selection("prev")
-			end,
-		},
-		{
-			mode = { "n" },
-			key = "j",
-			hint = { key = "j/k", label = "navigate" },
-			handler = function()
-				move_selection("next")
-			end,
-		},
-		{
-			mode = { "n" },
-			key = "k",
-			handler = function()
-				move_selection("prev")
-			end,
-		},
-		{
-			mode = { "n" },
-			key = "<CR>",
-			hint = { key = "Enter", label = "open" },
-			handler = function()
-				choose(selected_path())
-			end,
-		},
-		{
-			mode = { "n" },
-			key = "q",
-			hint = { key = "q", label = "close" },
-			handler = close,
-		},
-	}
+	keymap_actions = Keymaps.create({
+		renderer = renderer,
+		set_mode = function(mode)
+			current_mode = mode
+		end,
+		refresh = refresh_content,
+		move_selection = move_selection,
+		selected_path = selected_path,
+		choose = choose,
+		close = close,
+	})
 
 	refresh_content()
 	renderer:add_mappings(keymap_actions)
