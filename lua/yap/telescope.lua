@@ -379,11 +379,6 @@ function M.setup(opts)
 					local root = project.path
 					if type(root) == "string" and vim.fn.isdirectory(root) == 1 then
 						vim.cmd.cd(vim.fn.fnameescape(root))
-						vim.notify(
-							"Default project: " .. (project.title or vim.fn.fnamemodify(root, ":t")),
-						vim.log.levels.INFO,
-						{ title = "Projects" }
-					)
 						return
 					end
 				end
